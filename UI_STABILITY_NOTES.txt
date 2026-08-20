@@ -1,0 +1,19 @@
+Suvidha POS Installer V2 - Stable Premium UI
+
+UI changes:
+- Replaced custom GDI/gradient OnPaint controls with normal WinForms Panel/Label/Button controls.
+- Enabled WinForms DPI scaling.
+- Removed fixed 720px minimum card sizing that could overflow at 800x600.
+- Kept the Suvidha POS logo and existing 7-step installer flow.
+- Kept download/install/database/resume logic unchanged.
+- Kept Windows logon Scheduled Task resume behavior unchanged.
+- Added build-time validation so the unstable renderer cannot be reintroduced accidentally.
+
+Supported target range:
+- Minimum window: 800x600.
+- Responsive sidebar/content sizing up through large desktop resolutions.
+- Native WinForms controls are used for reliable repainting during resize and DPI changes.
+
+Important:
+- Build this package on Windows with .NET 8 SDK and Inno Setup 6.
+- GitHub Actions contains the only build workflow: .github/workflows/build.yml.

@@ -12,7 +12,7 @@ Premium .NET 8 x64 Windows installer for Suvidha POS.
 6. Setup & Backup
 7. Finish
 
-The UI is the premium dark-blue Suvidha POS design: branded header, 7-step sidebar, feature cards, component cards, progress bars, gradient action buttons and installation summary.
+The UI is a premium dark-blue Suvidha POS design using stable native WinForms controls: branded header, 7-step sidebar, feature cards, component cards, progress bars, accent action buttons and installation summary. Custom GDI painting is intentionally avoided to prevent resize/DPI rendering trails.
 
 ## Installation behavior
 

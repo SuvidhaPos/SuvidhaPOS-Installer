@@ -7,6 +7,20 @@ $release = '.\release'
 
 Write-Host '=== Suvidha POS Installer V2 - Windows x64 build ==='
 
+Write-Host '[0/5] Validate stable WinForms UI'
+$mainForm = Get-Content '.\Installer\MainForm.cs' -Raw
+if ($mainForm -notmatch 'AutoScaleMode = AutoScaleMode\.Dpi;') {
+    throw 'UI validation failed: DPI scaling is not enabled.'
+}
+if ($mainForm -match 'protected override void OnPaint') {
+    throw 'UI validation failed: custom GDI OnPaint renderer is not allowed.'
+}
+if ($mainForm -match 'Math\.Max\(720') {
+    throw 'UI validation failed: fixed 720px card sizing is not allowed.'
+}
+Write-Host 'Stable native WinForms UI validation passed.'
+
+
 if (-not (Test-Path $project)) {
     throw "Project file not found: $project"
 }

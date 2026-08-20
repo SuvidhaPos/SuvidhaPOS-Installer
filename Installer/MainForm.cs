@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Drawing.Drawing2D;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -110,7 +109,7 @@ public sealed class MainForm : Form
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(800, 600);
         Size = new Size(1500, 920);
-        AutoScaleMode = AutoScaleMode.None;
+        AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Bg;
         ForeColor = TextColor;
         Font = new Font("Segoe UI", 10F);
@@ -444,7 +443,7 @@ public sealed class MainForm : Form
         var host = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, Padding = new Padding(0, 4, 0, 0), BackColor = Color.Transparent }; pageBody.Controls.Add(host); host.BringToFront();
         foreach (var c in components)
         {
-            var card = new ComponentSelectCard(c) { Width = Math.Max(720, content.ClientSize.Width - 55), Height = 78, Margin = new Padding(0, 0, 0, 9) };
+            var card = new ComponentSelectCard(c) { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 78, Margin = new Padding(0, 0, 0, 9) };
             c.Check = card.Check; host.Controls.Add(card);
         }
         var note = new Label { Text = "SQL Server and SSMS use their normal Microsoft setup screens, so you can select Default Instance and other setup options during installation.", ForeColor = Muted, AutoSize = true, MaximumSize = new Size(1000, 40), Margin = new Padding(6, 8, 0, 0) }; host.Controls.Add(note);
@@ -456,7 +455,7 @@ public sealed class MainForm : Form
         var host = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, BackColor = Color.Transparent, Padding = new Padding(0, 4, 0, 0) }; pageBody.Controls.Add(host); host.BringToFront();
         downloadSummary = new Label { Text = "Ready to download selected files...", Font = new Font("Segoe UI Semibold", 11F), ForeColor = TextColor, AutoSize = true, Margin = new Padding(4, 5, 0, 12) }; host.Controls.Add(downloadSummary);
         foreach (var c in components.Where(x => x.Selected)) host.Controls.Add(CreateProgressCard(c, true));
-        var total = new RoundedCard { Width = Math.Max(720, content.ClientSize.Width - 55), Height = 94, Margin = new Padding(0, 8, 0, 0) }; host.Controls.Add(total);
+        var total = new RoundedCard { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 94, Margin = new Padding(0, 8, 0, 0) }; host.Controls.Add(total);
         total.Controls.Add(new Label { Text = "Overall Download Progress", Font = new Font("Segoe UI Semibold", 10.5F), ForeColor = TextColor, AutoSize = true, Location = new Point(18, 12) });
         downloadOverall = new ProgressBar { Location = new Point(18, 43), Size = new Size(total.Width - 36, 12), Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top, Style = ProgressBarStyle.Continuous }; total.Controls.Add(downloadOverall);
         var local = FindLocalMsi(); if (local != null) files["Suvidha POS Application"] = local;
@@ -467,7 +466,7 @@ public sealed class MainForm : Form
 
     private Control CreateProgressCard(ComponentItem c, bool download)
     {
-        var card = new RoundedCard { Width = Math.Max(720, content.ClientSize.Width - 55), Height = 82, Margin = new Padding(0, 0, 0, 8) };
+        var card = new RoundedCard { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 82, Margin = new Padding(0, 0, 0, 8) };
         var icon = new Label { Text = c.Kind == ComponentKind.Msi ? "▣" : c.Kind == ComponentKind.Local ? "▰" : "▤", Font = new Font("Segoe UI Symbol", 19F), ForeColor = Blue, AutoSize = true, Location = new Point(16, 12) }; card.Controls.Add(icon);
         card.Controls.Add(new Label { Text = c.Name, Font = new Font("Segoe UI Semibold", 10F), ForeColor = TextColor, AutoSize = true, Location = new Point(54, 10) });
         var status = new Label { Text = c.Status, Font = new Font("Segoe UI", 8.5F), ForeColor = Muted, AutoSize = true, Location = new Point(54, 37) }; card.Controls.Add(status); c.StatusLabel = status;
@@ -481,7 +480,7 @@ public sealed class MainForm : Form
         var host = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, BackColor = Color.Transparent, Padding = new Padding(0, 4, 0, 0) }; pageBody.Controls.Add(host); host.BringToFront();
         installSummary = new Label { Text = "Click Install to begin.", Font = new Font("Segoe UI Semibold", 11F), ForeColor = TextColor, AutoSize = true, Margin = new Padding(4, 5, 0, 12) }; host.Controls.Add(installSummary);
         foreach (var c in components.Where(x => x.Selected)) host.Controls.Add(CreateInstallCard(c));
-        var total = new RoundedCard { Width = Math.Max(720, content.ClientSize.Width - 55), Height = 94, Margin = new Padding(0, 8, 0, 0) }; host.Controls.Add(total);
+        var total = new RoundedCard { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 94, Margin = new Padding(0, 8, 0, 0) }; host.Controls.Add(total);
         total.Controls.Add(new Label { Text = "Overall Installation Progress", Font = new Font("Segoe UI Semibold", 10.5F), ForeColor = TextColor, AutoSize = true, Location = new Point(18, 12) });
         installOverall = new ProgressBar { Location = new Point(18, 43), Size = new Size(total.Width - 36, 12), Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top, Style = ProgressBarStyle.Continuous }; total.Controls.Add(installOverall);
         if (state.Completed.Contains("installation")) installSummary.Text = "Installation was completed. Click Next to continue.";
@@ -489,7 +488,7 @@ public sealed class MainForm : Form
 
     private Control CreateInstallCard(ComponentItem c)
     {
-        var card = new RoundedCard { Width = Math.Max(720, content.ClientSize.Width - 55), Height = 74, Margin = new Padding(0, 0, 0, 8) };
+        var card = new RoundedCard { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 74, Margin = new Padding(0, 0, 0, 8) };
         var icon = new Label { Text = "○", Font = new Font("Segoe UI", 18F), ForeColor = Muted, AutoSize = true, Location = new Point(18, 15) }; card.Controls.Add(icon);
         card.Controls.Add(new Label { Text = c.Name, Font = new Font("Segoe UI Semibold", 10F), ForeColor = TextColor, AutoSize = true, Location = new Point(55, 10) });
         var status = new Label { Text = c.Status, Font = new Font("Segoe UI", 8.5F), ForeColor = Muted, AutoSize = true, Location = new Point(55, 38) }; card.Controls.Add(status); c.StatusLabel = status;
@@ -777,64 +776,149 @@ public sealed class MainForm : Form
 
     private class RoundedCard : Panel
     {
-        public RoundedCard() { BackColor = Color.FromArgb(6, 24, 50); Padding = new Padding(10); Margin = new Padding(0); DoubleBuffered = true; }
-        protected override void OnPaint(PaintEventArgs e)
+        public RoundedCard()
         {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            // Clear the previous frame first. Without this, rounded cards can leave
-            // repeated border trails/artifacts when the window is resized or DPI changes.
-            e.Graphics.Clear(Parent?.BackColor ?? Color.FromArgb(4, 12, 25));
-            using var path = RoundRect(new Rectangle(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1)), 12);
-            using var b = new SolidBrush(BackColor);
-            e.Graphics.FillPath(b, path);
-            using var p = new Pen(Color.FromArgb(22, 78, 129));
-            e.Graphics.DrawPath(p, path);
-            base.OnPaint(e);
+            BackColor = CardBg;
+            BorderStyle = BorderStyle.FixedSingle;
+            Padding = new Padding(10);
+            Margin = new Padding(0);
+            DoubleBuffered = true;
         }
-        private static GraphicsPath RoundRect(Rectangle r, int radius) { var p = new GraphicsPath(); int d = radius * 2; p.AddArc(r.X, r.Y, d, d, 180, 90); p.AddArc(r.Right - d, r.Y, d, d, 270, 90); p.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90); p.AddArc(r.X, r.Bottom - d, d, d, 90, 90); p.CloseFigure(); return p; }
     }
 
     private sealed class FeatureCard : Panel
     {
-        public Color Accent { get; set; } = Color.Blue;
-        public FeatureCard() { BackColor = Color.FromArgb(5, 27, 55); DoubleBuffered = true; }
-        protected override void OnPaint(PaintEventArgs e)
+        public Color Accent { get; set; } = Blue;
+
+        public FeatureCard()
         {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            e.Graphics.Clear(Parent?.BackColor ?? Color.FromArgb(4, 12, 25));
-            using var b = new SolidBrush(BackColor);
-            e.Graphics.FillRectangle(b, ClientRectangle);
-            using var p = new Pen(Color.FromArgb(30, Accent.R, Accent.G, Accent.B));
-            e.Graphics.DrawRectangle(p, 0, 0, Math.Max(0, Width - 1), Math.Max(0, Height - 1));
-            base.OnPaint(e);
+            BackColor = CardBg2;
+            BorderStyle = BorderStyle.FixedSingle;
+            DoubleBuffered = true;
         }
     }
 
     private sealed class StepItem : Panel
     {
-        private readonly Label number, title, sub;
-        private bool active, done;
-        public bool Active { get => active; set { active = value; Invalidate(); } }
-        public bool Done { get => done; set { done = value; number.Text = done ? "✓" : number.Tag?.ToString() ?? ""; Invalidate(); } }
+        private readonly Label number;
+        private readonly Label title;
+        private readonly Label sub;
+        private bool active;
+        private bool done;
+
+        public bool Active
+        {
+            get => active;
+            set { active = value; ApplyStyle(); }
+        }
+
+        public bool Done
+        {
+            get => done;
+            set
+            {
+                done = value;
+                number.Text = done ? "✓" : number.Tag?.ToString() ?? "";
+                ApplyStyle();
+            }
+        }
+
         public StepItem(int n, string name, string subtitle)
         {
-            number = new Label { Text = n.ToString(), Tag = n.ToString(), TextAlign = ContentAlignment.MiddleCenter, Size = new Size(42, 42), Location = new Point(14, 22), Font = new Font("Segoe UI Semibold", 14F), ForeColor = Color.White }; Controls.Add(number);
-            title = new Label { Text = name, AutoSize = true, Font = new Font("Segoe UI Semibold", 10.5F), ForeColor = Color.White, Location = new Point(70, 18) }; Controls.Add(title);
-            sub = new Label { Text = subtitle, AutoSize = true, Font = new Font("Segoe UI", 8.5F), ForeColor = MutedStatic, Location = new Point(70, 47) }; Controls.Add(sub);
+            BackColor = SidebarBg;
+            BorderStyle = BorderStyle.FixedSingle;
+            DoubleBuffered = true;
+
+            number = new Label
+            {
+                Text = n.ToString(),
+                Tag = n.ToString(),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Size = new Size(42, 42),
+                Location = new Point(14, 22),
+                Font = new Font("Segoe UI Semibold", 14F),
+                ForeColor = Color.White
+            };
+            Controls.Add(number);
+
+            title = new Label
+            {
+                Text = name,
+                AutoSize = true,
+                Font = new Font("Segoe UI Semibold", 10.5F),
+                ForeColor = TextColor,
+                Location = new Point(70, 18)
+            };
+            Controls.Add(title);
+
+            sub = new Label
+            {
+                Text = subtitle,
+                AutoSize = true,
+                Font = new Font("Segoe UI", 8.5F),
+                ForeColor = Muted,
+                Location = new Point(70, 47)
+            };
+            Controls.Add(sub);
+
+            ApplyStyle();
         }
-        private static Color MutedStatic => Color.FromArgb(154, 177, 202);
-        protected override void OnPaint(PaintEventArgs e)
+
+        private void ApplyStyle()
         {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            if (active) using (var b = new SolidBrush(Color.FromArgb(28, 24, 105, 200))) e.Graphics.FillRectangle(b, ClientRectangle);
-            using var p = new Pen(active ? Color.FromArgb(0, 170, 255) : Color.FromArgb(18, 55, 92)); e.Graphics.DrawRectangle(p, 0, 0, Width - 1, Height - 1);
-            using var c = new SolidBrush(done ? Color.FromArgb(29, 190, 110) : active ? Color.FromArgb(12, 119, 225) : Color.FromArgb(20, 40, 68)); e.Graphics.FillEllipse(c, 14, 22, 42, 42);
+            BackColor = active ? Color.FromArgb(12, 38, 70) : SidebarBg;
+            BorderStyle = BorderStyle.FixedSingle;
+            number.BackColor = done
+                ? Green
+                : active ? Blue : Color.FromArgb(20, 40, 68);
+            number.ForeColor = Color.White;
+            title.ForeColor = TextColor;
+            sub.ForeColor = Muted;
         }
     }
 
     private sealed class HelpCard : Panel
     {
-        public HelpCard() { BackColor = Color.FromArgb(6, 24, 50); Padding = new Padding(18); DoubleBuffered = true; Controls.Add(new Label { Text = "◉", Font = new Font("Segoe UI Symbol", 30F), ForeColor = Color.FromArgb(72, 184, 255), AutoSize = true, Location = new Point(14, 12) }); Controls.Add(new Label { Text = "Need Help?", Font = new Font("Segoe UI Semibold", 13F), ForeColor = Color.FromArgb(0, 190, 255), AutoSize = true, Location = new Point(64, 18) }); Controls.Add(new Label { Text = "We’re here to help you", Font = new Font("Segoe UI", 9F), ForeColor = TextColor, AutoSize = true, Location = new Point(64, 46) }); Controls.Add(new Label { Text = "+91 70042 52545", Font = new Font("Segoe UI Semibold", 11F), ForeColor = Color.FromArgb(0, 190, 255), AutoSize = true, Location = new Point(18, 78) }); Controls.Add(new Label { Text = "support@suvidhapos.com", Font = new Font("Segoe UI", 9.5F), ForeColor = TextColor, AutoSize = true, Location = new Point(18, 108) }); }
+        public HelpCard()
+        {
+            BackColor = CardBg;
+            BorderStyle = BorderStyle.FixedSingle;
+            Padding = new Padding(18);
+            DoubleBuffered = true;
+
+            Controls.Add(new Label
+            {
+                Text = "Need Help?",
+                Font = new Font("Segoe UI Semibold", 13F),
+                ForeColor = Cyan,
+                AutoSize = true,
+                Location = new Point(18, 16)
+            });
+            Controls.Add(new Label
+            {
+                Text = "We're here to help you",
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = TextColor,
+                AutoSize = true,
+                Location = new Point(18, 48)
+            });
+            Controls.Add(new Label
+            {
+                Text = "+91 70042 52545",
+                Font = new Font("Segoe UI Semibold", 11F),
+                ForeColor = Cyan,
+                AutoSize = true,
+                Location = new Point(18, 78)
+            });
+            Controls.Add(new Label
+            {
+                Text = "support@suvidhapos.com",
+                Font = new Font("Segoe UI", 9.5F),
+                ForeColor = TextColor,
+                AutoSize = true,
+                Location = new Point(18, 108)
+            });
+        }
     }
 
     private sealed class ComponentSelectCard : RoundedCard
@@ -851,25 +935,37 @@ public sealed class MainForm : Form
 
     private sealed class GradientPanel : Panel
     {
-        public Color StartColor { get; set; } = Color.Black; public Color EndColor { get; set; } = Color.Black;
-        protected override void OnPaintBackground(PaintEventArgs e) { using var b = new LinearGradientBrush(ClientRectangle, StartColor, EndColor, 0F); e.Graphics.FillRectangle(b, ClientRectangle); }
+        public Color StartColor { get; set; } = Color.Black;
+        public Color EndColor { get; set; } = Color.Black;
+
+        public GradientPanel()
+        {
+            BackColor = Bg;
+            DoubleBuffered = true;
+        }
     }
 
     private sealed class GradientLabel : Label
     {
-        protected override void OnPaint(PaintEventArgs e)
+        public GradientLabel()
         {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            using var path = new GraphicsPath();
-            path.AddString(Text, Font.FontFamily, (int)Font.Style, Font.Size * e.Graphics.DpiY / 72f, new PointF(0, 0), StringFormat.GenericDefault);
-            using var brush = new LinearGradientBrush(ClientRectangle, Color.FromArgb(115, 87, 255), Color.FromArgb(255, 65, 72), 0F);
-            e.Graphics.FillPath(brush, path);
+            ForeColor = Color.FromArgb(194, 124, 255);
+            AutoEllipsis = true;
         }
     }
 
     private sealed class GradientButton : Button
     {
-        public Color StartColor { get; set; } = Color.Purple; public Color EndColor { get; set; } = Color.Orange;
-        protected override void OnPaint(PaintEventArgs e) { e.Graphics.SmoothingMode = SmoothingMode.AntiAlias; using var b = new LinearGradientBrush(ClientRectangle, StartColor, EndColor, 0F); e.Graphics.FillRectangle(b, ClientRectangle); TextRenderer.DrawText(e.Graphics, Text, Font, ClientRectangle, ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter); }
+        public Color StartColor { get; set; } = Blue;
+        public Color EndColor { get; set; } = Blue;
+
+        public GradientButton()
+        {
+            BackColor = Blue;
+            FlatStyle = FlatStyle.Flat;
+            FlatAppearance.BorderSize = 0;
+            UseVisualStyleBackColor = false;
+        }
     }
+
 }
