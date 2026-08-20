@@ -20,6 +20,16 @@ if ($mainForm -match 'Math\.Max\(720') {
 }
 Write-Host 'Stable native WinForms UI validation passed.'
 
+$nextCheck = Get-Content '.\Installer\MainForm.cs' -Raw
+if ($nextCheck -notmatch 'if \(step == 0\).*?ShowStep\(1\)') {
+    throw 'Navigation validation failed: Welcome Next must advance to Terms.'
+}
+if ($nextCheck -notmatch 'nextButton\.Click \+= NextClicked;') {
+    throw 'Navigation validation failed: Next button is not wired.'
+}
+Write-Host 'Next button navigation validation passed.'
+
+
 
 if (-not (Test-Path $project)) {
     throw "Project file not found: $project"

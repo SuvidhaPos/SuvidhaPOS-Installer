@@ -1,37 +1,14 @@
-Suvidha POS Installer V2 - Final Cross Check
+FINAL WORKING UI CROSS-CHECK
 
-Source/package:
-- Complete source tree is included; no old partial 3-file patch is used.
-- Exactly one GitHub Actions workflow is included: .github/workflows/build.yml.
-- Solution, project, source files, installer script, assets and terms file are present.
+Confirmed fixes:
+1. Welcome page Next button now explicitly executes ShowStep(1).
+2. Next button remains wired to NextClicked.
+3. Welcome screen uses a simpler responsive native WinForms layout.
+4. Large headline/feature cards are reduced so text does not overlap.
+5. At narrow widths the feature cards switch to a clean 2x2 layout.
+6. Minimum window remains 800x600 and DPI scaling remains enabled.
+7. Custom GDI OnPaint renderer remains prohibited.
+8. Resume state and Windows logon resume task remain preserved.
+9. Build script and GitHub Actions both validate the Next navigation fix.
 
-Build:
-- GitHub Actions and local build.ps1 use the same .NET 8 win-x64 build/publish configuration.
-- PublishSingleFile=false.
-- PublishTrimmed=false.
-- Self-contained win-x64 publish is used.
-- Inno Setup packages the complete publish folder.
-- Workflow validates EXE, DLL and logo assets before packaging.
-- Local build.ps1 performs the same output checks before Inno Setup packaging.
-
-UI:
-- Premium 7-step WinForms UI is preserved.
-- Suvidha POS logo is used in the application shell and application icon.
-- Inno Setup uses Assets/SuvidhaPOS.ico as the installer icon.
-- Existing responsive shell and PerMonitorV2 DPI manifest are preserved.
-- Minimum window size remains 800x600.
-
-Resume:
-- Progress is saved to %ProgramData%\SuvidhaPOS\Installer\resume.json.
-- Scheduled Task "SuvidhaPOS Installer Resume" is created while setup is incomplete.
-- The task launches the installer at Windows interactive logon after restart/power loss.
-- Completed setup removes the resume task.
-
-Runtime:
-- Microsoft.Data.SqlClient managed networking switch is enabled before the form starts.
-- This avoids requiring the optional VC++ runtime before the installer itself starts.
-- Inno Setup packages the complete self-contained publish output.
-
-Important:
-- GitHub Actions must be enabled for the repository. The workflow file cannot enable/disable Actions at repository settings level.
-- The actual final Setup EXE is produced by the Windows GitHub Actions runner or by a Windows machine with .NET 8 and Inno Setup 6 installed.
+This package is intended to replace the previous ZIP completely.

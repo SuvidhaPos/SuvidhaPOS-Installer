@@ -330,77 +330,218 @@ public sealed class MainForm : Form
     private void BuildWelcome()
     {
         StartPage("Welcome", "Welcome to Installer", "Next  →");
-        var hero = new RoundedCard { Dock = DockStyle.Top, Height = 348, Margin = new Padding(0, 0, 0, 14) };
-        pageBody.Controls.Add(hero); hero.BringToFront();
 
-        var logo = new PictureBox { Size = new Size(230, 150), Location = new Point(30, 28), SizeMode = PictureBoxSizeMode.Zoom, BackColor = Color.Transparent };
-        try { var p = Path.Combine(AppContext.BaseDirectory, "Assets", "SuvidhaPOS.png"); if (File.Exists(p)) logo.Image = Image.FromFile(p); } catch { }
+        var hero = new RoundedCard
+        {
+            Dock = DockStyle.Top,
+            Height = 300,
+            Margin = new Padding(0, 0, 0, 12),
+            Padding = new Padding(18)
+        };
+        pageBody.Controls.Add(hero);
+        hero.BringToFront();
+
+        var logo = new PictureBox
+        {
+            Size = new Size(185, 105),
+            Location = new Point(22, 24),
+            SizeMode = PictureBoxSizeMode.Zoom,
+            BackColor = Color.Transparent
+        };
+        try
+        {
+            var p = Path.Combine(AppContext.BaseDirectory, "Assets", "SuvidhaPOS.png");
+            if (File.Exists(p)) logo.Image = Image.FromFile(p);
+        }
+        catch { }
         hero.Controls.Add(logo);
-        var title1 = new Label { Text = "Welcome to", Font = new Font("Segoe UI Semibold", 30F), ForeColor = TextColor, AutoSize = true, Location = new Point(265, 35) }; hero.Controls.Add(title1);
-        var title2 = new GradientLabel { Text = "Suvidha POS Installer", Font = new Font("Segoe UI Semibold", 36F), AutoSize = true, Location = new Point(265, 80) }; hero.Controls.Add(title2);
-        var desc = new Label { Text = "This installer will download and install all required components\nfor Suvidha POS on your computer automatically.", Font = new Font("Segoe UI", 13F), ForeColor = TextColor, AutoSize = true, Location = new Point(268, 143) }; hero.Controls.Add(desc);
+
+        var title1 = new Label
+        {
+            Text = "Welcome to",
+            Font = new Font("Segoe UI Semibold", 25F),
+            ForeColor = TextColor,
+            AutoSize = true,
+            Location = new Point(225, 28)
+        };
+        hero.Controls.Add(title1);
+
+        var title2 = new Label
+        {
+            Text = "Suvidha POS Installer",
+            Font = new Font("Segoe UI Semibold", 30F),
+            ForeColor = Color.FromArgb(194, 124, 255),
+            AutoSize = true,
+            MaximumSize = new Size(900, 50),
+            Location = new Point(225, 66)
+        };
+        hero.Controls.Add(title2);
+
+        var desc = new Label
+        {
+            Text = "Install Suvidha POS and its required components safely and step-by-step.",
+            Font = new Font("Segoe UI", 11.5F),
+            ForeColor = TextColor,
+            AutoSize = true,
+            MaximumSize = new Size(900, 42),
+            Location = new Point(228, 116)
+        };
+        hero.Controls.Add(desc);
+
         var features = new[]
         {
-            AddFeature(hero, 28, 224, "◈", "Safe & Secure", "100% Verified", Cyan),
-            AddFeature(hero, 220, 224, "ϟ", "Automatic", "No Manual Steps", Purple),
-            AddFeature(hero, 412, 224, "◉", "Fast & Easy", "One Click Install", Green),
-            AddFeature(hero, 604, 224, "⚙", "Smart Setup", "Detect & Configure", Orange)
+            AddFeature(hero, 22, 166, "✓", "Secure", "Verified files", Cyan),
+            AddFeature(hero, 214, 166, "⚡", "Automatic", "Guided setup", Purple),
+            AddFeature(hero, 406, 166, "●", "Easy", "One click", Green),
+            AddFeature(hero, 598, 166, "⚙", "Smart", "Detect & configure", Orange)
         };
-        hero.Resize += (_, _) =>
+
+        void LayoutHero()
         {
             var w = hero.ClientSize.Width;
-            if (w >= 1000)
+            var narrow = w < 900;
+
+            if (!narrow)
             {
-                hero.Height = 348; logo.Bounds = new Rectangle(30, 28, 230, 150);
-                title1.Location = new Point(265, 35); title1.Font = new Font("Segoe UI Semibold", 30F);
-                title2.Location = new Point(265, 80); title2.Font = new Font("Segoe UI Semibold", 36F);
-                desc.Location = new Point(268, 143); desc.Font = new Font("Segoe UI", 13F);
-                int[] xs = { 28, 220, 412, 604 };
-                for (int i = 0; i < features.Length; i++) features[i].Bounds = new Rectangle(xs[i], 224, 175, 84);
+                hero.Height = 300;
+                logo.Bounds = new Rectangle(22, 24, 185, 105);
+                title1.Location = new Point(225, 28);
+                title1.Font = new Font("Segoe UI Semibold", 25F);
+                title2.Location = new Point(225, 66);
+                title2.Font = new Font("Segoe UI Semibold", 30F);
+                desc.Location = new Point(228, 116);
+                desc.Font = new Font("Segoe UI", 11.5F);
+
+                var gap = 10;
+                var left = 22;
+                var cardW = Math.Max(150, (w - left * 2 - gap * 3) / 4);
+                for (int i = 0; i < features.Length; i++)
+                    features[i].Bounds = new Rectangle(left + i * (cardW + gap), 166, cardW, 82);
             }
             else
             {
-                hero.Height = 390;
-                var pad = 18; var innerW = Math.Max(300, w - pad * 2); var logoW = Math.Min(180, innerW / 3);
-                logo.Bounds = new Rectangle(pad, 12, logoW, 105);
-                var tx = pad + logoW + 14;
-                title1.Location = new Point(tx, 25); title1.Font = new Font("Segoe UI Semibold", 22F);
-                title2.Location = new Point(tx, 60); title2.Font = new Font("Segoe UI Semibold", 25F);
-                desc.Location = new Point(pad, 125); desc.Font = new Font("Segoe UI", 10F);
-                var gap = 8; var cardW = Math.Max(130, (innerW - gap) / 2);
+                hero.Height = 410;
+                var pad = 18;
+                logo.Bounds = new Rectangle(pad, 18, 150, 88);
+                title1.Location = new Point(180, 24);
+                title1.Font = new Font("Segoe UI Semibold", 20F);
+                title2.Location = new Point(180, 57);
+                title2.Font = new Font("Segoe UI Semibold", 23F);
+                desc.Location = new Point(pad, 112);
+                desc.Font = new Font("Segoe UI", 10F);
+
+                var gap = 8;
+                var innerW = Math.Max(300, w - pad * 2);
+                var cardW = Math.Max(130, (innerW - gap) / 2);
                 for (int i = 0; i < features.Length; i++)
                 {
-                    var row = i / 2; var col = i % 2;
-                    features[i].Bounds = new Rectangle(pad + col * (cardW + gap), 190 + row * 90, cardW, 82);
+                    var row = i / 2;
+                    var col = i % 2;
+                    features[i].Bounds = new Rectangle(
+                        pad + col * (cardW + gap),
+                        160 + row * 90,
+                        cardW,
+                        82);
                 }
             }
-        };
-        hero.PerformLayout();
+        }
 
-        var source = new RoundedCard { Dock = DockStyle.Top, Height = 112, Margin = new Padding(0, 0, 0, 14) }; pageBody.Controls.Add(source); source.BringToFront();
-        AddSectionTitle(source, "Source Folder", "All software files will be used from this location", 20);
-        var folder = new Label { Text = SoftwareFolder, Font = new Font("Segoe UI Semibold", 12F), ForeColor = Color.FromArgb(73, 255, 71), AutoSize = true, Location = new Point(125, 59) }; source.Controls.Add(folder);
-        var open = MakeButton("📁  Open Folder", 170, Color.FromArgb(7, 54, 108)); open.Anchor = AnchorStyles.Top | AnchorStyles.Right; source.Controls.Add(open);
-        source.Resize += (_, _) =>
+        hero.Resize += (_, _) => LayoutHero();
+        LayoutHero();
+
+        var source = new RoundedCard
         {
-            if (source.ClientSize.Width < 650) { source.Height = 132; folder.Location = new Point(20, 72); open.Location = new Point(Math.Max(20, source.ClientSize.Width - open.Width - 18), 30); }
-            else { source.Height = 112; folder.Location = new Point(125, 59); open.Location = new Point(Math.Max(20, source.ClientSize.Width - open.Width - 22), 31); }
+            Dock = DockStyle.Top,
+            Height = 104,
+            Margin = new Padding(0, 0, 0, 12)
         };
-        open.Location = new Point(Math.Max(20, source.ClientSize.Width - open.Width - 22), 31);
-        open.Click += (_, _) => { try { Directory.CreateDirectory(SoftwareFolder); Process.Start("explorer.exe", SoftwareFolder); } catch { } };
+        pageBody.Controls.Add(source);
+        source.BringToFront();
 
-        var bottom = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, BackColor = Color.Transparent, Margin = new Padding(0) };
-        bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50)); bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50)); pageBody.Controls.Add(bottom); bottom.BringToFront();
-        bottom.Controls.Add(CreateChecklistCard("What will be installed?", new[] { "SQL Server 2019", "SQL Server Management Studio (SSMS)", "Crystal Reports Runtime", "Suvidha POS Application", "Database Backup & Restore" }), 0, 0);
-        bottom.Controls.Add(CreateChecklistCard("System Requirements", new[] { "Windows 10 / 11 (64-bit)", "4 GB RAM or more", "10 GB Free Disk Space", "Internet Connection (For Download)", "Administrator Privileges" }), 1, 0);
+        AddSectionTitle(source, "Source Folder", "Software files will be used from this location", 14);
+
+        var folder = new Label
+        {
+            Text = SoftwareFolder,
+            Font = new Font("Segoe UI Semibold", 11F),
+            ForeColor = Green,
+            AutoSize = true,
+            Location = new Point(20, 58)
+        };
+        source.Controls.Add(folder);
+
+        var open = MakeButton("📁  Open", 125, Color.FromArgb(7, 54, 108));
+        open.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        source.Controls.Add(open);
+
+        void LayoutSource()
+        {
+            open.Location = new Point(
+                Math.Max(20, source.ClientSize.Width - open.Width - 18),
+                30);
+
+            folder.MaximumSize = new Size(
+                Math.Max(180, open.Left - folder.Left - 14),
+                28);
+        }
+
+        source.Resize += (_, _) => LayoutSource();
+        LayoutSource();
+        open.Click += (_, _) =>
+        {
+            try
+            {
+                Directory.CreateDirectory(SoftwareFolder);
+                Process.Start("explorer.exe", SoftwareFolder);
+            }
+            catch { }
+        };
+
+        var bottom = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            Height = 245,
+            ColumnCount = 2,
+            RowCount = 1,
+            BackColor = Color.Transparent,
+            Margin = new Padding(0)
+        };
+        bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        pageBody.Controls.Add(bottom);
+        bottom.BringToFront();
+
+        bottom.Controls.Add(
+            CreateChecklistCard(
+                "What will be installed?",
+                new[]
+                {
+                    "SQL Server 2019",
+                    "SQL Server Management Studio",
+                    "Crystal Reports Runtime",
+                    "Suvidha POS Application",
+                    "Database Backup & Restore"
+                }), 0, 0);
+
+        bottom.Controls.Add(
+            CreateChecklistCard(
+                "System Requirements",
+                new[]
+                {
+                    "Windows 10 / 11 (64-bit)",
+                    "4 GB RAM or more",
+                    "10 GB free disk space",
+                    "Internet connection for downloads",
+                    "Administrator privileges"
+                }), 1, 0);
     }
 
     private FeatureCard AddFeature(Control parent, int x, int y, string icon, string title, string sub, Color color)
     {
         var c = new FeatureCard { Size = new Size(175, 84), Location = new Point(x, y), Accent = color }; parent.Controls.Add(c);
         c.Controls.Add(new Label { Text = icon, Font = new Font("Segoe UI Symbol", 25F), ForeColor = color, AutoSize = true, Location = new Point(12, 12) });
-        c.Controls.Add(new Label { Text = title, Font = new Font("Segoe UI Semibold", 10F), ForeColor = TextColor, AutoSize = true, Location = new Point(54, 15) });
-        c.Controls.Add(new Label { Text = sub, Font = new Font("Segoe UI", 8.5F), ForeColor = Color.FromArgb(62, 255, 88), AutoSize = true, Location = new Point(54, 43) });
+        c.Controls.Add(new Label { Text = title, Font = new Font("Segoe UI Semibold", 10F), ForeColor = TextColor, AutoSize = true, MaximumSize = new Size(105, 22), Location = new Point(54, 14) });
+        c.Controls.Add(new Label { Text = sub, Font = new Font("Segoe UI", 8.2F), ForeColor = Green, AutoSize = true, MaximumSize = new Size(110, 20), Location = new Point(54, 43) });
         return c;
     }
 
@@ -545,6 +686,12 @@ public sealed class MainForm : Form
     {
         if (busy) return;
         if (step == 6) { Close(); return; }
+        if (step == 0)
+        {
+            MarkDone("welcome");
+            ShowStep(1);
+            return;
+        }
         if (step == 1)
         {
             if (!terms.Checked) { MessageBox.Show(this, "Please accept the Terms & Conditions first.", "Suvidha POS Installer", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
