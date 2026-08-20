@@ -39,3 +39,14 @@ Do not commit customer database backups or private installer binaries.
 
 ## Side-by-side error 14001 fix
 The GitHub workflow now publishes the installer as a self-contained `win-x64` folder rather than a single-file executable. Inno Setup packages the full publish output. This avoids the native single-file startup path that can produce `CreateProcess failed; code 14001` on some Windows machines.
+
+
+## If GitHub Actions does not start
+
+1. Open the repository's **Actions** tab.
+2. Confirm Actions are enabled for the repository.
+3. Open **Build SuvidhaPos-Installer** and use **Run workflow** on `main` for a manual build.
+4. If a run exists, open the failed job and use the first red step/log as the build error.
+5. The workflow itself verifies all required source and asset files before publishing.
+
+There is only one workflow in this package: `.github/workflows/build.yml`.

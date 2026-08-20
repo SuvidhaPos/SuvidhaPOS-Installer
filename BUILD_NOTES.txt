@@ -1,8 +1,19 @@
-BUILD NOTES - 2.1.1
+BUILD NOTES - 2.1.2
 
-Fix for Windows CreateProcess error 14001 (Side-by-Side configuration incorrect):
-- Corrected the Windows application manifest namespace for dpiAware/dpiAwareness.
-- The previous manifest used the wrong namespace and could cause Windows to reject the EXE before .NET starts.
-- The application remains self-contained win-x64 and is published as a folder (PublishSingleFile=false).
-- Inno Setup packages the complete publish folder.
-- Premium responsive UI, logo, 7-step flow and resume logic are retained.
+Build configuration alignment:
+- build.ps1 and .github/workflows/build.yml now use the same .NET 8 win-x64 build/publish settings.
+- PublishSingleFile=false and PublishTrimmed=false are enforced in both paths.
+- The complete self-contained publish folder is passed to Inno Setup.
+- The local PowerShell build validates the EXE, DLL and Suvidha POS logo assets before packaging.
+- The local script accepts the standard Inno Setup 6 install path under either Program Files (x86) or Program Files.
+
+Windows startup/resume:
+- The installer saves progress to %ProgramData%\SuvidhaPOS\Installer\resume.json.
+- A Scheduled Task named "SuvidhaPOS Installer Resume" is created while setup is incomplete.
+- The task launches the installer at interactive logon after Windows restart/power recovery.
+- The task is removed when the Finish step marks setup complete.
+
+UI/assets:
+- Premium 7-step WinForms UI is retained.
+- SuvidhaPOS logo/icon and wizard assets are retained.
+- The application manifest keeps PerMonitorV2 DPI awareness for responsive rendering.
