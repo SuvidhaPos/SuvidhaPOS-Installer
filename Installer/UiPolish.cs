@@ -31,10 +31,8 @@ internal static class UiPolish
         form.SuspendLayout();
         try
         {
-            content.HorizontalScroll.Enabled = false;
-            content.HorizontalScroll.Visible = false;
-            pageBody.HorizontalScroll.Enabled = false;
-            pageBody.HorizontalScroll.Visible = false;
+            SetHorizontalScroll(content, false);
+            SetHorizontalScroll(pageBody, false);
             LayoutSidebar(sidebar);
             foreach (Control c in pageBody.Controls)
             {
@@ -120,7 +118,6 @@ internal static class UiPolish
                 table.ColumnCount = 1; table.RowCount = 2;
                 table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
                 table.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
-                table.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
                 table.Controls.Add(a, 0, 0); table.Controls.Add(b, 0, 1);
             }
             else
@@ -138,8 +135,7 @@ internal static class UiPolish
     private static void LayoutCard(Control card)
     {
         card.BackColor = Card;
-        card.HorizontalScroll.Enabled = false;
-        card.HorizontalScroll.Visible = false;
+        SetHorizontalScroll(card, false);
         if (IsWelcomeHero(card)) { LayoutWelcomeHero(card); return; }
         if (IsFinishHero(card)) { LayoutFinishHero(card); return; }
         var width = Math.Max(260, card.ClientSize.Width);
@@ -236,5 +232,16 @@ internal static class UiPolish
         }
     }
 
-    private static T? GetField<T>(object obj, string name) => obj.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(obj) as T;
+    private static void SetHorizontalScroll(Control control, bool enabled)
+    {
+        if (control is ScrollableControl scrollable)
+        {
+            scrollable.HorizontalScroll.Enabled = enabled;
+            scrollable.HorizontalScroll.Visible = enabled;
+            if (!enabled) scrollable.AutoScrollMinSize = Size.Empty;
+        }
+    }
+
+    private static T? GetField<T>(object obj, string name) where T : class =>
+        obj.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(obj) as T;
 }
