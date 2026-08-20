@@ -1,0 +1,25 @@
+SUVIDHA POS INSTALLER – TERMS & CONDITIONS
+
+1. Purpose
+This installer prepares a Windows computer for Suvidha POS by downloading and launching selected software packages and, if requested, restoring a user-supplied SQL Server backup.
+
+2. User responsibility
+The user is responsible for ensuring that all software packages are genuine, properly licensed, compatible with the target computer and obtained from authorized sources.
+
+3. Database restore
+Database restoration can replace an existing database. Keep an independent copy of the backup before starting a restore and verify the target SQL Server instance.
+
+4. Administrator access
+Administrator privileges are required because software installation and SQL Server operations can modify protected system resources.
+
+5. Third-party software
+SQL Server, SQL Server Management Studio and Crystal Reports are third-party products. Their respective licenses and terms remain applicable.
+
+6. Data protection
+The installer performs downloads and database operations according to the configured workflow. Database restoration is performed locally on the target computer.
+
+7. Cancellation and failure
+An installation step may fail because of Windows policy, permissions, antivirus, package compatibility, network access or a third-party installer. The installer reports the failed step.
+
+8. Acceptance
+By continuing, you confirm that you have read and accepted these terms and have authority to install the selected software and restore the selected database.

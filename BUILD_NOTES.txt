@@ -1,0 +1,8 @@
+BUILD NOTES - 2.1.1
+
+Fix for Windows CreateProcess error 14001 (Side-by-Side configuration incorrect):
+- Corrected the Windows application manifest namespace for dpiAware/dpiAwareness.
+- The previous manifest used the wrong namespace and could cause Windows to reject the EXE before .NET starts.
+- The application remains self-contained win-x64 and is published as a folder (PublishSingleFile=false).
+- Inno Setup packages the complete publish folder.
+- Premium responsive UI, logo, 7-step flow and resume logic are retained.
