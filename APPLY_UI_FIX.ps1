@@ -1,3 +1,16 @@
+$ErrorActionPreference = "Stop"
+$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$main = Join-Path $root "Installer\MainForm.cs"
+$ui = Join-Path $root "Installer\UiPolish.cs"
+
+if (!(Test-Path $main)) { throw "Installer\MainForm.cs not found. Run this from the repository root." }
+
+$text = [IO.File]::ReadAllText($main)
+$text = $text.Replace('AutoScaleMode = AutoScaleMode.Dpi;', 'AutoScaleMode = AutoScaleMode.None;')
+$text = $text.Replace('private static readonly string DownloadDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "SuvidhaPOS", "Installer", "Downloads");', 'private static readonly string DownloadDir = SoftwareFolder;')
+[IO.File]::WriteAllText($main, $text, [Text.UTF8Encoding]::new($false))
+
+$uiText = @'
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -238,3 +251,10 @@ internal static class UiPolish
 
     private static T? GetField<T>(object obj, string name) => obj.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(obj) as T;
 }
+
+'@
+[IO.File]::WriteAllText($ui, $uiText, [Text.UTF8Encoding]::new($false))
+
+New-Item -ItemType Directory -Force -Path 'D:\Suvidha Pos\Software' | Out-Null
+Write-Host "Applied responsive UI and download-folder fixes."
+Write-Host "All remote installer downloads will now be stored in D:\Suvidha Pos\Software."
