@@ -30,7 +30,6 @@
   <ItemGroup>
     <None Include="..\Assets\SuvidhaPOS.png" Link="Assets\SuvidhaPOS.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\Assets\SuvidhaPOS.ico" Link="Assets\SuvidhaPOS.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Include="..\Assets\ReferenceUI\*.png" Link="Assets\ReferenceUI\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
