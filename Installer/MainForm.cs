@@ -107,9 +107,9 @@ public sealed class MainForm : Form
 
         Text = "Suvidha POS Installer";
         StartPosition = FormStartPosition.CenterScreen;
-        MinimumSize = new Size(960, 680);
-        Size = new Size(1280, 800);
-        AutoScaleMode = AutoScaleMode.Dpi;
+        MinimumSize = new Size(1024, 768);
+        Size = new Size(1366, 768);
+        AutoScaleMode = AutoScaleMode.None;
         BackColor = Bg;
         ForeColor = TextColor;
         Font = new Font("Segoe UI", 10F);
@@ -272,8 +272,8 @@ public sealed class MainForm : Form
         };
         root.Controls.Add(sidebar, 0, 1);
 
-        string[] names = { "Welcome", "Terms & Conditions", "Components", "Download", "Install", "Setup & Backup", "Finish" };
-        string[] subs = { "Welcome to Installer", "Read important terms", "Select components", "Download installation files", "Install all components", "Database setup & backup", "Installation complete" };
+        string[] names = { "Welcome", "Terms & Conditions", "Components", "Download", "Install", "Database Setup", "Finish" };
+        string[] subs = { "Welcome to Installer", "Read important terms", "Select components", "Download installation files", "Install all components", "Database setup", "Installation complete" };
 
         for (int i = 0; i < names.Length; i++)
         {
@@ -1071,7 +1071,7 @@ public sealed class MainForm : Form
 
     private void BuildSetupAndBackup()
     {
-        StartPage("Setup & Backup", "Database setup, restore and application configuration.", "Save & Continue  →");
+        StartPage("Database Setup", "Database setup, restore and application configuration.", "Save & Continue  →");
 
         var grid = new TableLayoutPanel
         {
@@ -1301,6 +1301,12 @@ public sealed class MainForm : Form
     {
         if (busy) return;
         if (step == 6) { Close(); return; }
+
+        if (step == 0)
+        {
+            ShowStep(1);
+            return;
+        }
         if (step == 1)
         {
             if (!terms.Checked) { MessageBox.Show(this, "Please accept the Terms & Conditions first.", "Suvidha POS Installer", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
@@ -1718,7 +1724,7 @@ public sealed class MainForm : Form
             };
             contact = new Label
             {
-                Text = "+91 70042 52545",
+                Text = "+91 827171 8844",
                 Font = new Font("Segoe UI Semibold", 9F),
                 ForeColor = Color.FromArgb(0, 190, 255),
                 AutoSize = false,
