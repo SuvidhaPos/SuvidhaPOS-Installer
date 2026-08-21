@@ -4,8 +4,7 @@ Set-StrictMode -Version Latest
 $path = Join-Path $PSScriptRoot '..\Installer\MainForm.cs'
 $text = Get-Content -Raw -LiteralPath $path
 
-# Make the source itself DPI-stable before controls are created. Runtime changes are too late
-# for fixed-height WinForms cards because scaling has already happened in the constructor.
+# Make the source itself DPI-stable before controls are created.
 $text = $text -replace 'AutoScaleMode = AutoScaleMode\.Dpi;', 'AutoScaleMode = AutoScaleMode.None;'
 $text = $text -replace '\bMinimumSize = new Size\(960, 680\);', 'MinimumSize = new Size(1024, 768);'
 $text = $text -replace '\bSize = new Size\(1280, 800\);', 'Size = new Size(1366, 768);'
@@ -14,8 +13,14 @@ $text = $text.Replace('"Setup & Backup"', '"Setup Database"')
 $text = $text.Replace('"Database setup & backup"', '"Database setup"')
 $text = $text.Replace('SQL Server setup remains interactive so you can choose Default Instance, authentication and other Microsoft setup options.', 'SQL Server is configured automatically by the installer so you can continue through the seven installer steps without leaving this wizard.')
 
-$pattern = '(?s)    private static async Task RunInstallerAsync\(string path, ComponentKind kind\)\s*\{.*?\r?\n    \}\r?\n\r?\n    private async Task RestoreOnlyAsync'
+# Welcome -> Terms must work from the first screen.
+$nextAnchor = 'if (step == 6) { Close(); return; }\n        if (step == 1)'
+if (-not $text.Contains('if (step == 0)\n        {')) {
+    if (-not $text.Contains($nextAnchor)) { throw 'NextClicked navigation anchor not found.' }
+    $text = $text.Replace($nextAnchor, 'if (step == 6) { Close(); return; }\n        if (step == 0)\n        {\n            ShowStep(1); return;\n        }\n        if (step == 1)')
+}
 
+$pattern = '(?s)    private static async Task RunInstallerAsync\(string path, ComponentKind kind\)\s*\{.*?\r?\n    \}\r?\n\r?\n    private async Task RestoreOnlyAsync\(\)'
 $replacement = @'
     private async Task RunInstallerAsync(string path, ComponentKind kind)
     {
@@ -24,7 +29,7 @@ $replacement = @'
 
         if (kind == ComponentKind.Msi)
         {
-            // MSI packages are installed silently so Step 5 remains the only visible wizard.
+            // MSI packages run silently so Step 5 remains the only visible wizard.
             psi = new ProcessStartInfo("msiexec.exe", $"/i \"{path}\" /qn /norestart")
             {
                 UseShellExecute = true,
@@ -66,14 +71,22 @@ $replacement = @'
                 WorkingDirectory = Path.GetDirectoryName(path)!
             };
         }
+        else if (fileName.Contains("SSMS", StringComparison.OrdinalIgnoreCase))
+        {
+            // SSMS uses the Visual Studio bootstrapper command-line syntax.
+            // --quiet prevents a second wizard window; --wait keeps Step 5 blocked until completion.
+            string args = "--quiet --wait --norestart";
+            psi = new ProcessStartInfo(path, args)
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                WorkingDirectory = Path.GetDirectoryName(path)!
+            };
+        }
         else
         {
-            // SSMS / VC++ EXE installers should not open another wizard window.
-            string args = fileName.Contains("SSMS", StringComparison.OrdinalIgnoreCase)
-                ? "/install /quiet /norestart"
-                : "/quiet /norestart";
-
-            psi = new ProcessStartInfo(path, args)
+            // VC++ and other supported EXE prerequisites.
+            psi = new ProcessStartInfo(path, "/quiet /norestart")
             {
                 UseShellExecute = true,
                 Verb = "runas",
@@ -104,14 +117,12 @@ $replacement = @'
         return false;
     }
 
-    private async Task RestoreOnlyAsync
+    private async Task RestoreOnlyAsync()
 '@
 
 $match = [regex]::Matches($text, $pattern)
-if ($match.Count -ne 1) {
-    throw "Could not locate the expected RunInstallerAsync method. Matches found: $($match.Count)"
-}
+if ($match.Count -ne 1) { throw "Could not locate RunInstallerAsync. Matches found: $($match.Count)" }
+$text = [regex]::Replace($text, $pattern, $replacement, 1)
 
-$updated = [regex]::Replace($text, $pattern, $replacement, 1)
-Set-Content -LiteralPath $path -Value $updated -Encoding UTF8
-Write-Host "Applied seven-step silent installer flow and responsive UI fixes to $path"
+Set-Content -LiteralPath $path -Value $text -Encoding UTF8
+Write-Host "Applied silent seven-step install flow and DPI/navigation fixes."
