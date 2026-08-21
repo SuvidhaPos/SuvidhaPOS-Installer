@@ -328,7 +328,6 @@ internal sealed class ReferenceUi : Panel
             if (currentStep is 3 or 4)
             {
                 int overall = currentStep == 3 ? GetProgress(downloadOverallField) : GetProgress(installOverallField);
-                // Rebuild the lightweight data overlay so real percentages/statuses stay in sync.
                 BuildRuntimeOverlays();
             }
             else if (currentStep == 5)
@@ -343,7 +342,7 @@ internal sealed class ReferenceUi : Panel
         catch { }
     }
 
-    private Panel AddText(Rectangle bounds, string value, float size, Color fore, Color back, ContentAlignment align, string family)
+    private Label AddText(Rectangle bounds, string value, float size, Color fore, Color back, ContentAlignment align, string family)
     {
         var label = new Label
         {
@@ -397,7 +396,6 @@ internal sealed class ReferenceUi : Panel
 
     private void AddIconPlaceholder(Rectangle bounds)
     {
-        // Keeps the dynamic layer from obscuring the existing reference icon.
         var p = new Panel { Bounds = bounds, BackColor = Color.Transparent, Enabled = false };
         dataLayer.Controls.Add(p);
     }
