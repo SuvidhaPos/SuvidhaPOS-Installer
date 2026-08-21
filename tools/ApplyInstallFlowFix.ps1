@@ -4,14 +4,24 @@ Set-StrictMode -Version Latest
 $path = Join-Path $PSScriptRoot '..\Installer\MainForm.cs'
 $text = Get-Content -Raw -LiteralPath $path
 
-$text = $text -replace 'AutoScaleMode\s*=\s*AutoScaleMode\.Dpi;', 'AutoScaleMode = AutoScaleMode.None;'
-$text = $text -replace 'MinimumSize\s*=\s*new Size\(960,\s*680\);', 'MinimumSize = new Size(1024, 768);'
-$text = $text -replace 'Size\s*=\s*new Size\(1280,\s*800\);', 'Size = new Size(1366, 768);'
-$text = $text.Replace('+91 70042 52545', '+91 827171 8844')
-$text = $text.Replace('"Setup & Backup"', '"Setup Database"')
-$text = $text.Replace('"Database setup & backup"', '"Database setup"')
+function Replace-Regex([string]$pattern, [string]$replacement, [string]$label) {
+    $updated = [regex]::Replace($script:text, $pattern, $replacement)
+    if ($updated -ne $script:text) {
+        $script:text = $updated
+        Write-Host "Applied: $label"
+    } else {
+        Write-Host "No change needed: $label"
+    }
+}
 
-# Welcome -> Terms navigation. Keep this tolerant so source formatting changes do not break the build.
+Replace-Regex 'AutoScaleMode\s*=\s*AutoScaleMode\.Dpi;' 'AutoScaleMode = AutoScaleMode.None;' 'disable WinForms automatic DPI scaling'
+Replace-Regex 'MinimumSize\s*=\s*new Size\(960,\s*680\);' 'MinimumSize = new Size(1024, 768);' 'minimum window size'
+Replace-Regex 'Size\s*=\s*new Size\(1280,\s*800\);' 'Size = new Size(1366, 768);' 'default window size'
+Replace-Regex '"Setup & Backup"' '"Setup Database"' 'step 6 title'
+Replace-Regex '"Database setup & backup"' '"Database setup"' 'step 6 subtitle'
+Replace-Regex '\+91 70042 52545' '+91 827171 8844' 'support phone'
+
+# Welcome -> Terms navigation. This is optional and idempotent.
 if ($text -notmatch '(?s)if \(step == 0\)\s*\{\s*ShowStep\(1\);\s*return;\s*\}') {
     $navPattern = '(?m)^\s*if \(step == 6\) \{ Close\(\); return; \}\s*\r?\n\s*if \(step == 1\)'
     if ([regex]::IsMatch($text, $navPattern)) {
@@ -23,12 +33,13 @@ if ($text -notmatch '(?s)if \(step == 0\)\s*\{\s*ShowStep\(1\);\s*return;\s*\}')
         }
         if (step == 1)
 '@
-        $text = [regex]::Replace($text, $navPattern, $replacement, 1)
+        $text = [regex]::Replace($text, $navPattern, $replacement.TrimEnd("`r", "`n"), 1)
+        Write-Host 'Applied: Welcome -> Terms navigation'
     }
 }
 
-# Replace the installer runner. Use ProcessStartInfo.ArgumentList so generated C# contains no
-# fragile escaped quotes/backslashes and therefore remains compiler-safe.
+# Important: the replacement below is valid C# source. The single-quoted PowerShell
+# here-string preserves normal C# quotes and does not inject literal backslashes before them.
 $runnerPattern = '(?s)    private static async Task RunInstallerAsync\(string path, ComponentKind kind\)\s*\{.*?\r?\n    \}\r?\n\r?\n    private async Task RestoreOnlyAsync\(\)'
 $runnerReplacement = @'
     private static async Task RunInstallerAsync(string path, ComponentKind kind)
@@ -134,7 +145,10 @@ $runnerReplacement = @'
 
 $matches = [regex]::Matches($text, $runnerPattern)
 if ($matches.Count -eq 1) {
-    $text = [regex]::Replace($text, $runnerPattern, $runnerReplacement, 1)
+    $text = [regex]::Replace($text, $runnerPattern, $runnerReplacement.TrimEnd("`r", "`n"), 1)
+    Write-Host 'Applied: valid silent installer runner'
+} else {
+    Write-Host "RunInstallerAsync replacement skipped; matches found: $($matches.Count)"
 }
 
 Set-Content -LiteralPath $path -Value $text -Encoding UTF8
