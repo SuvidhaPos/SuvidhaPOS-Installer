@@ -13,7 +13,7 @@ internal static class Program
 
         ApplicationConfiguration.Initialize();
         using var form = new MainForm();
-        FreshUi.Apply(form);
+        RuntimeFix.Apply(form);
         Application.Run(form);
     }
 }
