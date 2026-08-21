@@ -1,15 +1,11 @@
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using System.Drawing;
 
 namespace SuvidhaPosInstaller;
 
-/// <summary>
-/// Rebuilds the installer shell in one place. The page/installation logic remains in MainForm,
-/// but the visual shell is replaced so there is no second UI patch fighting the original layout.
-/// </summary>
 internal static class FreshUi
 {
     private static readonly Color Bg = Color.FromArgb(4, 12, 25);
@@ -21,6 +17,15 @@ internal static class FreshUi
     private static readonly Color Muted = Color.FromArgb(166, 184, 207);
     private static readonly Color Blue = Color.FromArgb(0, 166, 255);
 
+    private const string SoftwareFolder = @"D:\Suvidha Pos\Software";
+    private const string UserVcDriveId = "1v90y9MXcOirG_mlev-IsLrlEVuFa3AIK";
+    private const string OfficialVcX64Url = "https://aka.ms/vc14/vc_redist.x64.exe";
+    private const string VcFileName = "vcredist.x64.exe";
+
+    private static readonly HttpClient Http = CreateHttpClient();
+    private static Task? vcPrefetchTask;
+    private static bool refreshPending;
+
     private static readonly FieldInfo ShellField = Field("shellRoot");
     private static readonly FieldInfo SidebarField = Field("sidebar");
     private static readonly FieldInfo ContentField = Field("content");
@@ -29,20 +34,20 @@ internal static class FreshUi
     private static readonly FieldInfo StepField = Field("step");
     private static readonly FieldInfo NextField = Field("nextButton");
     private static readonly FieldInfo BusyField = Field("busy");
-    private static readonly HttpClient Http = new(new HttpClientHandler { AllowAutoRedirect = true, AutomaticDecompression = DecompressionMethods.All });
-    private static bool vcPrefetchStarted;
 
     public static void Apply(MainForm form)
     {
-        form.MinimumSize = new Size(1100, 720);
-        form.ClientSize = new Size(Math.Max(1180, form.ClientSize.Width), Math.Max(760, form.ClientSize.Height));
-        form.AutoScaleMode = AutoScaleMode.Dpi;
+        // The shell is laid out in logical pixels, so do not let WinForms scale fixed heights twice.
+        form.AutoScaleMode = AutoScaleMode.None;
+        form.MinimumSize = new Size(1024, 768);
+        form.ClientSize = new Size(1366, 768);
         form.FormBorderStyle = FormBorderStyle.Sizable;
         form.MaximizeBox = true;
         form.MinimizeBox = true;
         form.BackColor = Bg;
         form.ForeColor = Text;
         form.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+        form.Padding = Padding.Empty;
 
         var shell = BuildShell(form);
         ShellField.SetValue(form, shell);
@@ -51,8 +56,9 @@ internal static class FreshUi
         {
             Dock = DockStyle.Fill,
             BackColor = Bg,
-            Padding = new Padding(14, 12, 14, 10),
-            Margin = Padding.Empty
+            Padding = new Padding(14, 10, 14, 10),
+            Margin = Padding.Empty,
+            AutoScroll = false
         };
         ContentField.SetValue(form, content);
         shell.Controls.Add(content, 1, 1);
@@ -60,19 +66,16 @@ internal static class FreshUi
         var sidebar = BuildSidebar();
         SidebarField.SetValue(form, sidebar);
         shell.Controls.Add(sidebar, 0, 1);
-        content.ControlAdded += (_, _) => { UpdateStepVisuals(form, sidebar); WireCurrentNext(form); if (GetStep(form) == 2) _ = PrefetchVcRedistAsync(form); };
 
         var (title, sub) = BuildHeader(shell);
         HeaderTitleField.SetValue(form, title);
         HeaderSubField.SetValue(form, sub);
 
-        form.Resize += (_, _) => ResizeShell(form);
-        ResizeShell(form);
-        WireNavigation(form, sidebar);
-        WireCurrentNext(form);
+        form.Resize += (_, _) => ScheduleRefresh(form);
+        content.ControlAdded += (_, _) => ScheduleRefresh(form);
 
-        InvokePrivate(form, "ShowStep", GetStep(form));
-        ResizeShell(form);
+        WireSidebar(form, sidebar);
+        Refresh(form);
     }
 
     private static TableLayoutPanel BuildShell(MainForm form)
@@ -88,7 +91,7 @@ internal static class FreshUi
         };
         shell.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 270));
         shell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        shell.RowStyles.Add(new RowStyle(SizeType.Absolute, 88));
+        shell.RowStyles.Add(new RowStyle(SizeType.Absolute, 82));
         shell.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         form.Controls.Clear();
         form.Controls.Add(shell);
@@ -103,12 +106,12 @@ internal static class FreshUi
             ColumnCount = 3,
             RowCount = 1,
             BackColor = HeaderBg,
-            Padding = new Padding(18, 8, 18, 8),
+            Padding = new Padding(16, 6, 16, 6),
             Margin = Padding.Empty
         };
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 60));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 64));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 290));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 250));
         shell.Controls.Add(header, 0, 0);
         shell.SetColumnSpan(header, 2);
 
@@ -117,7 +120,7 @@ internal static class FreshUi
             Dock = DockStyle.Fill,
             SizeMode = PictureBoxSizeMode.Zoom,
             BackColor = Color.Transparent,
-            Margin = new Padding(0, 2, 10, 2)
+            Margin = Padding.Empty
         };
         try
         {
@@ -131,7 +134,7 @@ internal static class FreshUi
         {
             Text = "Suvidha POS  |  Installer",
             Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI Semibold", 21F),
+            Font = new Font("Segoe UI Semibold", 19F),
             ForeColor = Text,
             TextAlign = ContentAlignment.MiddleLeft,
             AutoEllipsis = true,
@@ -147,14 +150,14 @@ internal static class FreshUi
             Margin = Padding.Empty,
             Padding = Padding.Empty
         };
-        info.RowStyles.Add(new RowStyle(SizeType.Percent, 56));
-        info.RowStyles.Add(new RowStyle(SizeType.Percent, 44));
+        info.RowStyles.Add(new RowStyle(SizeType.Percent, 58));
+        info.RowStyles.Add(new RowStyle(SizeType.Percent, 42));
         header.Controls.Add(info, 2, 0);
 
         var title = new Label
         {
             Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI Semibold", 12F),
+            Font = new Font("Segoe UI Semibold", 11F),
             ForeColor = Text,
             TextAlign = ContentAlignment.MiddleRight,
             AutoEllipsis = true,
@@ -163,7 +166,7 @@ internal static class FreshUi
         var sub = new Label
         {
             Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI", 9F),
+            Font = new Font("Segoe UI", 8.5F),
             ForeColor = Muted,
             TextAlign = ContentAlignment.MiddleRight,
             AutoEllipsis = true,
@@ -183,7 +186,7 @@ internal static class FreshUi
             WrapContents = false,
             AutoScroll = true,
             BackColor = SidebarBg,
-            Padding = new Padding(12, 12, 12, 12),
+            Padding = new Padding(10, 10, 10, 10),
             Margin = Padding.Empty
         };
 
@@ -191,126 +194,257 @@ internal static class FreshUi
         string[] subs = { "Welcome to Installer", "Read important terms", "Select components", "Download installation files", "Install all components", "Configure database & backup", "Installation complete" };
         for (int i = 0; i < names.Length; i++)
         {
-            var item = new StepButton(i, names[i], subs[i])
+            sidebar.Controls.Add(new StepButton(i, names[i], subs[i])
             {
                 Tag = i,
                 Width = 244,
-                Height = 76,
+                Height = 74,
                 Margin = new Padding(0, 0, 0, 7)
-            };
-            sidebar.Controls.Add(item);
+            });
         }
-        sidebar.Controls.Add(new HelpCard { Width = 244, Height = 112, Margin = new Padding(0, 8, 0, 0) });
+
+        sidebar.Controls.Add(new HelpCard
+        {
+            Width = 244,
+            Height = 108,
+            Margin = new Padding(0, 7, 0, 0)
+        });
         return sidebar;
     }
 
-    private static void WireNavigation(MainForm form, FlowLayoutPanel sidebar)
+    private static void WireSidebar(MainForm form, FlowLayoutPanel sidebar)
     {
-        foreach (Control control in sidebar.Controls)
+        foreach (var button in sidebar.Controls.OfType<StepButton>())
         {
-            if (control is not StepButton button) continue;
             button.Click += (_, _) =>
             {
                 if (BusyField.GetValue(form) is true) return;
-                int target = (int)button.Tag!;
+                var target = (int)button.Tag!;
                 if (target <= GetStep(form))
                 {
                     InvokePrivate(form, "ShowStep", target);
-                    ResizeShell(form);
+                    Refresh(form);
                 }
             };
         }
     }
 
-    private static void WireCurrentNext(MainForm form)
-    {
-        var next = NextField.GetValue(form) as Button;
-        if (next == null) return;
-        if (GetStep(form) == 2 && vcPrefetchStarted) next.Enabled = false;
-        if (Equals(next.Tag, "FreshUiWired")) return;
-        next.Tag = "FreshUiWired";
-        next.Click += (_, _) =>
-        {
-            if (GetStep(form) == 0 && BusyField.GetValue(form) is not true)
-            {
-                InvokePrivate(form, "ShowStep", 1);
-                ResizeShell(form);
-            }
-        };
-    }
-
-    private static async Task PrefetchVcRedistAsync(MainForm form)
-    {
-        if (vcPrefetchStarted) return;
-        vcPrefetchStarted = true;
-        try
-        {
-            const string folder = @"D:\Suvidha Pos\Software";
-            Directory.CreateDirectory(folder);
-            var existing = Directory.EnumerateFiles(folder, "*.exe", SearchOption.TopDirectoryOnly).FirstOrDefault(x =>
-            {
-                var n = Path.GetFileName(x);
-                return n.Contains("vcredist", StringComparison.OrdinalIgnoreCase) || n.Contains("vc_redist", StringComparison.OrdinalIgnoreCase);
-            });
-            if (existing != null) return;
-
-            if (NextField.GetValue(form) is Button next) next.Enabled = false;
-            const string id = "1v90y9MXcOirG_mlev-IsLrlEVuFa3AIK";
-            string url = $"https://drive.usercontent.google.com/download?id={Uri.EscapeDataString(id)}&export=download&confirm=t";
-            using var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-            response.EnsureSuccessStatusCode();
-            if (response.Content.Headers.ContentType?.MediaType?.Contains("text/html", StringComparison.OrdinalIgnoreCase) == true)
-                throw new InvalidOperationException("Google Drive returned a confirmation page.");
-            string target = Path.Combine(folder, "Microsoft Visual C++ Redistributable.exe");
-            await using var input = await response.Content.ReadAsStreamAsync();
-            await using var output = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.None, 131072, true);
-            await input.CopyToAsync(output);
-            if (new FileInfo(target).Length < 100 * 1024) throw new InvalidOperationException("Downloaded VC++ runtime file is unexpectedly small.");
-        }
-        catch { }
-        finally
-        {
-            vcPrefetchStarted = false;
-            if (GetStep(form) == 2 && NextField.GetValue(form) is Button next) next.Enabled = true;
-        }
-    }
-
-    private static void ResizeShell(MainForm form)
+    private static void Refresh(MainForm form)
     {
         var shell = ShellField.GetValue(form) as TableLayoutPanel;
         var sidebar = SidebarField.GetValue(form) as FlowLayoutPanel;
-        if (shell == null || sidebar == null) return;
-        int w = Math.Max(1100, form.ClientSize.Width);
-        int h = Math.Max(720, form.ClientSize.Height);
-        int sidebarWidth = Math.Clamp((int)Math.Round(w * 0.21), 250, 300);
-        int headerHeight = Math.Clamp((int)Math.Round(h * 0.115), 82, 96);
+        var content = ContentField.GetValue(form) as Panel;
+        if (shell == null || sidebar == null || content == null) return;
+
+        int w = Math.Max(form.ClientSize.Width, 1024);
+        int h = Math.Max(form.ClientSize.Height, 768);
+        int sidebarWidth = Math.Clamp((int)Math.Round(w * 0.205), 250, 286);
+        int headerHeight = Math.Clamp((int)Math.Round(h * 0.105), 78, 88);
+
+        shell.SuspendLayout();
         shell.ColumnStyles[0].Width = sidebarWidth;
         shell.RowStyles[0].Height = headerHeight;
-        int itemWidth = Math.Max(224, sidebarWidth - sidebar.Padding.Horizontal);
-        int itemHeight = h < 760 ? 70 : 76;
-        foreach (Control c in sidebar.Controls)
+        shell.ResumeLayout(true);
+
+        int itemWidth = Math.Max(220, sidebarWidth - sidebar.Padding.Horizontal);
+        int itemHeight = h < 820 ? 70 : 74;
+        foreach (Control child in sidebar.Controls)
         {
-            if (c is StepButton step)
+            if (child is StepButton step)
             {
                 step.Width = itemWidth;
                 step.Height = itemHeight;
             }
-            else if (c is HelpCard help)
+            else if (child is HelpCard help)
             {
                 help.Width = itemWidth;
-                help.Height = h < 760 ? 98 : 112;
+                help.Height = h < 820 ? 100 : 108;
             }
         }
+
+        var headerTitle = HeaderTitleField.GetValue(form) as Label;
+        var headerSub = HeaderSubField.GetValue(form) as Label;
+        if (headerTitle != null) headerTitle.Text = GetHeaderTitle(GetStep(form));
+        if (headerSub != null) headerSub.Text = GetHeaderSubtitle(GetStep(form));
+
+        var next = NextField.GetValue(form) as Button;
+        if (next != null)
+        {
+            next.FlatStyle = FlatStyle.Flat;
+            next.FlatAppearance.BorderSize = 1;
+            next.FlatAppearance.BorderColor = Blue;
+            next.BackColor = Blue;
+            next.ForeColor = Color.White;
+            next.Font = new Font("Segoe UI Semibold", 10.5F);
+            next.AutoEllipsis = true;
+            next.Dock = DockStyle.Fill;
+            next.UseVisualStyleBackColor = false;
+            if (!Equals(next.Tag, "FreshUiNext"))
+            {
+                next.Tag = "FreshUiNext";
+                next.Click += (_, _) =>
+                {
+                    if (GetStep(form) == 0 && BusyField.GetValue(form) is not true)
+                    {
+                        InvokePrivate(form, "ShowStep", 1);
+                        ScheduleRefresh(form);
+                    }
+                };
+            }
+        }
+
+        foreach (var child in AllControls(content).OfType<Label>())
+        {
+            child.AutoEllipsis = true;
+            child.UseMnemonic = false;
+        }
+
         UpdateStepVisuals(form, sidebar);
+        ManageVcPrefetch(form);
+    }
+
+    private static void ManageVcPrefetch(MainForm form)
+    {
+        if (GetStep(form) != 2) return;
+        var next = NextField.GetValue(form) as Button;
+        if (next == null) return;
+
+        vcPrefetchTask ??= EnsureVcRedistAsync();
+        next.Enabled = vcPrefetchTask.IsCompleted;
+        if (vcPrefetchTask.IsCompleted) return;
+
+        _ = vcPrefetchTask.ContinueWith(_ =>
+        {
+            if (form.IsDisposed || !form.IsHandleCreated) return;
+            form.BeginInvoke(new Action(() =>
+            {
+                if (GetStep(form) != 2) return;
+                if (NextField.GetValue(form) is Button currentNext) currentNext.Enabled = true;
+            }));
+        }, TaskScheduler.Default);
+    }
+
+    private static async Task EnsureVcRedistAsync()
+    {
+        Directory.CreateDirectory(SoftwareFolder);
+        var target = Path.Combine(SoftwareFolder, VcFileName);
+        if (IsGoodInstaller(target)) return;
+
+        try
+        {
+            await DownloadGoogleDriveAsync(UserVcDriveId, target);
+            if (IsGoodInstaller(target)) return;
+        }
+        catch
+        {
+            TryDelete(target);
+        }
+
+        await DownloadHttpFileAsync(OfficialVcX64Url, target);
+        if (!IsGoodInstaller(target))
+            throw new InvalidOperationException("Microsoft Visual C++ Redistributable download was not a valid x64 installer.");
+    }
+
+    private static async Task DownloadGoogleDriveAsync(string fileId, string target)
+    {
+        using var first = await Http.GetAsync(
+            $"https://drive.usercontent.google.com/download?id={Uri.EscapeDataString(fileId)}&export=download&confirm=t",
+            HttpCompletionOption.ResponseHeadersRead);
+        first.EnsureSuccessStatusCode();
+
+        var media = first.Content.Headers.ContentType?.MediaType ?? string.Empty;
+        if (!media.Contains("text/html", StringComparison.OrdinalIgnoreCase))
+        {
+            await SaveResponseAsync(first, target);
+            return;
+        }
+
+        var html = await first.Content.ReadAsStringAsync();
+        var match = Regex.Match(html, @"confirm=([0-9A-Za-z_-]+)", RegexOptions.IgnoreCase);
+        if (!match.Success) throw new InvalidOperationException("Google Drive returned a download page instead of the VC++ installer.");
+
+        using var second = await Http.GetAsync(
+            $"https://drive.usercontent.google.com/download?id={Uri.EscapeDataString(fileId)}&export=download&confirm={Uri.EscapeDataString(match.Groups[1].Value)}",
+            HttpCompletionOption.ResponseHeadersRead);
+        second.EnsureSuccessStatusCode();
+        await SaveResponseAsync(second, target);
+    }
+
+    private static async Task DownloadHttpFileAsync(string url, string target)
+    {
+        using var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+        await SaveResponseAsync(response, target);
+    }
+
+    private static async Task SaveResponseAsync(HttpResponseMessage response, string target)
+    {
+        var media = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+        if (media.Contains("text/html", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Download endpoint returned HTML instead of an installer file.");
+
+        await using var input = await response.Content.ReadAsStreamAsync();
+        await using var output = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.None, 131072, useAsync: true);
+        await input.CopyToAsync(output);
+    }
+
+    private static bool IsGoodInstaller(string path) => File.Exists(path) && new FileInfo(path).Length > 500_000;
+    private static void TryDelete(string path) { try { if (File.Exists(path)) File.Delete(path); } catch { } }
+
+    private static HttpClient CreateHttpClient()
+    {
+        var handler = new HttpClientHandler
+        {
+            AllowAutoRedirect = true,
+            AutomaticDecompression = DecompressionMethods.All,
+            UseCookies = true,
+            CookieContainer = new CookieContainer()
+        };
+        var client = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(5) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("SuvidhaPOS-Installer/2.3");
+        return client;
+    }
+
+    private static IEnumerable<Control> AllControls(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            yield return child;
+            foreach (var nested in AllControls(child)) yield return nested;
+        }
     }
 
     private static void UpdateStepVisuals(MainForm form, FlowLayoutPanel sidebar)
     {
         int current = GetStep(form);
         foreach (Control c in sidebar.Controls)
-            if (c is StepButton button && button.Tag is int i)
-                button.Active = i == current;
+            if (c is StepButton item && item.Tag is int index)
+                item.Active = index == current;
     }
+
+    private static string GetHeaderTitle(int step) => step switch
+    {
+        0 => "Welcome",
+        1 => "Terms & Conditions",
+        2 => "Components",
+        3 => "Download",
+        4 => "Install",
+        5 => "Database Setup",
+        6 => "Finish",
+        _ => "Suvidha POS Installer"
+    };
+
+    private static string GetHeaderSubtitle(int step) => step switch
+    {
+        0 => "Welcome to Installer",
+        1 => "Read important terms",
+        2 => "Select components",
+        3 => "Download installation files",
+        4 => "Install all components",
+        5 => "Configure database & backup",
+        6 => "Installation complete",
+        _ => string.Empty
+    };
 
     private static int GetStep(MainForm form) => StepField.GetValue(form) is int value ? Math.Clamp(value, 0, 6) : 0;
     private static FieldInfo Field(string name) => typeof(MainForm).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new MissingFieldException(typeof(MainForm).FullName, name);
@@ -321,25 +455,60 @@ internal static class FreshUi
         private bool active;
         public bool Active { get => active; set { active = value; Invalidate(); } }
 
-        public StepButton(int index, string text, string sub)
+        public StepButton(int index, string title, string subtitle)
         {
             DoubleBuffered = true;
-            Padding = new Padding(10, 8, 10, 8);
+            Padding = new Padding(9, 7, 9, 7);
             Cursor = Cursors.Hand;
-            var grid = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, BackColor = Color.Transparent, Margin = Padding.Empty, Padding = Padding.Empty };
+            var grid = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 2,
+                BackColor = Color.Transparent,
+                Margin = Padding.Empty,
+                Padding = Padding.Empty
+            };
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 42));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 56));
-            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 44));
-            var number = new Label { Text = (index + 1).ToString(), Dock = DockStyle.Fill, Font = new Font("Segoe UI Semibold", 12F), ForeColor = Color.White, TextAlign = ContentAlignment.MiddleCenter };
-            var title = new Label { Text = text, Dock = DockStyle.Fill, Font = new Font("Segoe UI Semibold", 10F), ForeColor = Color.White, AutoEllipsis = true, TextAlign = ContentAlignment.MiddleLeft, Margin = new Padding(8, 0, 0, 0) };
-            var subtitle = new Label { Text = sub, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(154, 177, 202), AutoEllipsis = true, TextAlign = ContentAlignment.MiddleLeft, Margin = new Padding(8, 0, 0, 0) };
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 54));
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 46));
+
+            var number = new Label
+            {
+                Text = (index + 1).ToString(),
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI Semibold", 12F),
+                ForeColor = Color.White,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Margin = Padding.Empty
+            };
+            var titleLabel = new Label
+            {
+                Text = title,
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI Semibold", 10F),
+                ForeColor = Color.White,
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoEllipsis = true,
+                Margin = new Padding(8, 0, 0, 0)
+            };
+            var subLabel = new Label
+            {
+                Text = subtitle,
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 8F),
+                ForeColor = Color.FromArgb(154, 177, 202),
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoEllipsis = true,
+                Margin = new Padding(8, 0, 0, 0)
+            };
+
             grid.Controls.Add(number, 0, 0);
             grid.SetRowSpan(number, 2);
-            grid.Controls.Add(title, 1, 0);
-            grid.Controls.Add(subtitle, 1, 1);
+            grid.Controls.Add(titleLabel, 1, 0);
+            grid.Controls.Add(subLabel, 1, 1);
             Controls.Add(grid);
-            foreach (Control child in grid.Controls) child.Click += (_, _) => OnClick(EventArgs.Empty);
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -350,13 +519,14 @@ internal static class FreshUi
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            using var pen = new Pen(active ? Blue : Border);
-            e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
-            int size = 38;
-            int y = Math.Max(8, (Height - size) / 2);
-            using var fill = new SolidBrush(active ? Color.FromArgb(12, 119, 225) : Color.FromArgb(20, 40, 68));
-            e.Graphics.FillEllipse(fill, 12, y, size, size);
             base.OnPaint(e);
+            using var pen = new Pen(active ? Blue : Border);
+            e.Graphics.DrawRectangle(pen, 0, 0, Math.Max(0, Width - 1), Math.Max(0, Height - 1));
+            const int size = 36;
+            int y = Math.Max(6, (Height - size) / 2);
+            using var fill = new SolidBrush(active ? Color.FromArgb(12, 119, 225) : Color.FromArgb(20, 40, 68));
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            e.Graphics.FillEllipse(fill, 12, y, size, size);
         }
     }
 
@@ -366,17 +536,36 @@ internal static class FreshUi
         {
             BackColor = CardBg;
             BorderStyle = BorderStyle.FixedSingle;
-            Padding = new Padding(12);
-            var grid = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, BackColor = Color.Transparent };
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
+            Padding = new Padding(10);
+            var grid = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 4,
+                BackColor = Color.Transparent,
+                Margin = Padding.Empty,
+                Padding = Padding.Empty
+            };
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
-            grid.Controls.Add(new Label { Text = "◉  Need Help?", Dock = DockStyle.Fill, Font = new Font("Segoe UI Semibold", 12F), ForeColor = Blue }, 0, 0);
+            grid.Controls.Add(new Label { Text = "◉  Need Help?", Dock = DockStyle.Fill, Font = new Font("Segoe UI Semibold", 11F), ForeColor = Blue, AutoEllipsis = true }, 0, 0);
             grid.Controls.Add(new Label { Text = "Support is available if you need help.", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 8F), ForeColor = Text, AutoEllipsis = true }, 0, 1);
-            grid.Controls.Add(new Label { Text = "", Dock = DockStyle.Fill }, 0, 2);
+            grid.Controls.Add(new Label { Dock = DockStyle.Fill }, 0, 2);
             grid.Controls.Add(new Label { Text = "+91 827171 8844", Dock = DockStyle.Fill, Font = new Font("Segoe UI Semibold", 9F), ForeColor = Blue, AutoEllipsis = true }, 0, 3);
             Controls.Add(grid);
         }
+    }
+
+    private static void ScheduleRefresh(MainForm form)
+    {
+        if (refreshPending || form.IsDisposed || !form.IsHandleCreated) return;
+        refreshPending = true;
+        form.BeginInvoke(new Action(() =>
+        {
+            refreshPending = false;
+            if (!form.IsDisposed) Refresh(form);
+        }));
     }
 }
