@@ -41,7 +41,7 @@ internal sealed class ReferenceUi : Panel
     private readonly FieldInfo installOverallField;
     private readonly FieldInfo downloadSummaryField;
     private readonly FieldInfo installSummaryField;
-    private readonly Timer refreshTimer;
+    private readonly System.Windows.Forms.Timer refreshTimer;
 
     private int currentStep;
     private bool dragging;
@@ -50,7 +50,7 @@ internal sealed class ReferenceUi : Panel
     private const int TextPad = 4;
     private static readonly Color PageBg = Color.FromArgb(4, 12, 25);
     private static readonly Color CardBg = Color.FromArgb(5, 22, 44);
-    private static readonly Color Text = Color.FromArgb(244, 247, 252);
+    private static readonly Color TextColor = Color.FromArgb(244, 247, 252);
     private static readonly Color Muted = Color.FromArgb(175, 190, 210);
     private static readonly Color Blue = Color.FromArgb(0, 166, 255);
     private static readonly Color Green = Color.FromArgb(48, 224, 119);
@@ -133,7 +133,7 @@ internal sealed class ReferenceUi : Panel
 
         HookDrag(canvas);
 
-        refreshTimer = new Timer { Interval = 250 };
+        refreshTimer = new System.Windows.Forms.Timer { Interval = 250 };
         refreshTimer.Tick += (_, _) => RefreshRuntimeData();
         refreshTimer.Start();
 
@@ -236,8 +236,8 @@ internal sealed class ReferenceUi : Panel
             string name = item?.Name ?? "";
             bool selected = item?.Selected ?? false;
             string size = GetFileSizeDisplay(name);
-            AddText(new Rectangle(466, y, 470, 28), name, 15, Text, Color.FromArgb(4, 18, 36), ContentAlignment.MiddleLeft, "Segoe UI Semibold");
-            AddText(new Rectangle(801, y, 92, 28), size, 14, Text, Color.FromArgb(4, 18, 36), ContentAlignment.MiddleRight, "Segoe UI");
+            AddText(new Rectangle(466, y, 470, 28), name, 15, TextColor, Color.FromArgb(4, 18, 36), ContentAlignment.MiddleLeft, "Segoe UI Semibold");
+            AddText(new Rectangle(801, y, 92, 28), size, 14, TextColor, Color.FromArgb(4, 18, 36), ContentAlignment.MiddleRight, "Segoe UI");
             AddCheck(new Rectangle(364, y + 1, 28, 28), selected);
         }
         long total = items.Where(x => x.Selected).Sum(x => GetActualBytes(x.Name));
@@ -249,7 +249,7 @@ internal sealed class ReferenceUi : Panel
         int overall = GetProgress(downloadOverallField);
         AddProgress(new Rectangle(348, 329, 687, 14), overall);
         AddText(new Rectangle(1050, 321, 70, 28), $"{overall}%", 16, Blue, CardBg, ContentAlignment.MiddleLeft, "Segoe UI Semibold");
-        AddText(new Rectangle(345, 365, 610, 26), GetLabelText(downloadSummaryField, "Downloading files..."), 14, Text, Color.FromArgb(5, 22, 44), ContentAlignment.MiddleLeft, "Segoe UI");
+        AddText(new Rectangle(345, 365, 610, 26), GetLabelText(downloadSummaryField, "Downloading files..."), 14, TextColor, Color.FromArgb(5, 22, 44), ContentAlignment.MiddleLeft, "Segoe UI");
         DrawComponentRows(530, true);
     }
 
@@ -258,7 +258,7 @@ internal sealed class ReferenceUi : Panel
         int overall = GetProgress(installOverallField);
         AddProgress(new Rectangle(347, 334, 685, 14), overall);
         AddText(new Rectangle(1045, 326, 70, 28), $"{overall}%", 16, Blue, CardBg, ContentAlignment.MiddleLeft, "Segoe UI Semibold");
-        AddText(new Rectangle(347, 365, 640, 26), GetLabelText(installSummaryField, "Installing files..."), 14, Text, Color.FromArgb(5, 22, 44), ContentAlignment.MiddleLeft, "Segoe UI");
+        AddText(new Rectangle(347, 365, 640, 26), GetLabelText(installSummaryField, "Installing files..."), 14, TextColor, Color.FromArgb(5, 22, 44), ContentAlignment.MiddleLeft, "Segoe UI");
         DrawComponentRows(538, false);
     }
 
@@ -269,8 +269,8 @@ internal sealed class ReferenceUi : Panel
         string restoreStatus = GetText(restoreStatusField, "");
         string configStatus = GetText(configStatusField, "");
 
-        AddText(new Rectangle(365, 359, 520, 44), server, 15, Text, DarkInput, ContentAlignment.MiddleLeft, "Segoe UI");
-        AddText(new Rectangle(365, 684, 520, 44), db, 15, Text, DarkInput, ContentAlignment.MiddleLeft, "Segoe UI");
+        AddText(new Rectangle(365, 359, 520, 44), server, 15, TextColor, DarkInput, ContentAlignment.MiddleLeft, "Segoe UI");
+        AddText(new Rectangle(365, 684, 520, 44), db, 15, TextColor, DarkInput, ContentAlignment.MiddleLeft, "Segoe UI");
         AddText(new Rectangle(1106, 497, 240, 28), server, 13, Blue, CardBg, ContentAlignment.MiddleLeft, "Segoe UI Semibold");
         AddText(new Rectangle(1106, 546, 240, 28), "Windows Authentication", 13, Blue, CardBg, ContentAlignment.MiddleLeft, "Segoe UI Semibold");
         AddText(new Rectangle(1106, 594, 240, 28), db, 13, Blue, CardBg, ContentAlignment.MiddleLeft, "Segoe UI Semibold");
@@ -291,10 +291,10 @@ internal sealed class ReferenceUi : Panel
         string date = DateTime.Now.ToString("dd MMM yyyy hh:mm tt");
         string status = installed == items.Count && installed > 0 ? "Completed Successfully" : $"{installed} of {items.Count} completed";
 
-        AddText(new Rectangle(411, 409, 410, 28), $"{installed} of {items.Count} components installed successfully", 14, Text, CardBg, ContentAlignment.MiddleLeft, "Segoe UI");
+        AddText(new Rectangle(411, 409, 410, 28), $"{installed} of {items.Count} components installed successfully", 14, TextColor, CardBg, ContentAlignment.MiddleLeft, "Segoe UI");
         AddText(new Rectangle(1208, 408, 156, 30), location, 13, Green, CardBg, ContentAlignment.MiddleRight, "Segoe UI Semibold");
         AddText(new Rectangle(1208, 454, 156, 30), version, 13, Green, CardBg, ContentAlignment.MiddleRight, "Segoe UI Semibold");
-        AddText(new Rectangle(1240, 500, 124, 30), items.Count.ToString(), 13, Text, CardBg, ContentAlignment.MiddleRight, "Segoe UI");
+        AddText(new Rectangle(1240, 500, 124, 30), items.Count.ToString(), 13, TextColor, CardBg, ContentAlignment.MiddleRight, "Segoe UI");
         AddText(new Rectangle(1196, 547, 168, 30), FormatBytes(totalDownload), 13, Green, CardBg, ContentAlignment.MiddleRight, "Segoe UI Semibold");
         AddText(new Rectangle(1196, 593, 168, 30), FormatBytes(totalInstall), 13, Green, CardBg, ContentAlignment.MiddleRight, "Segoe UI Semibold");
         AddText(new Rectangle(1145, 640, 219, 30), date, 13, Green, CardBg, ContentAlignment.MiddleRight, "Segoe UI Semibold");
@@ -311,8 +311,8 @@ internal sealed class ReferenceUi : Panel
             string status = item.Status;
             int pct = item.Progress;
             string size = GetFileSizeDisplay(item.Name);
-            AddText(new Rectangle(405, y + 7, 360, 28), item.Name, 14, Text, Color.FromArgb(3, 16, 31), ContentAlignment.MiddleLeft, "Segoe UI Semibold");
-            AddText(new Rectangle(744, y + 7, 105, 28), size, 13, Text, Color.FromArgb(3, 16, 31), ContentAlignment.MiddleRight, "Segoe UI");
+            AddText(new Rectangle(405, y + 7, 360, 28), item.Name, 14, TextColor, Color.FromArgb(3, 16, 31), ContentAlignment.MiddleLeft, "Segoe UI Semibold");
+            AddText(new Rectangle(744, y + 7, 105, 28), size, 13, TextColor, Color.FromArgb(3, 16, 31), ContentAlignment.MiddleRight, "Segoe UI");
             AddText(new Rectangle(889, y + 7, 156, 28), status, 12, status.Contains("Failed", StringComparison.OrdinalIgnoreCase) ? Color.FromArgb(255, 83, 98) : status.Contains("Installed", StringComparison.OrdinalIgnoreCase) || status.Contains("Ready", StringComparison.OrdinalIgnoreCase) ? Green : Blue, Color.FromArgb(3, 16, 31), ContentAlignment.MiddleLeft, "Segoe UI");
             AddText(new Rectangle(1050, y + 7, 50, 28), $"{pct}%", 12, Blue, Color.FromArgb(3, 16, 31), ContentAlignment.MiddleRight, "Segoe UI Semibold");
             AddProgress(new Rectangle(1105, y + 14, 220, 10), pct);
