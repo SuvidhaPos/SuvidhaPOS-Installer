@@ -15,6 +15,8 @@ internal static class Program
         AppContext.SetSwitch("Switch.Microsoft.Data.SqlClient.UseManagedNetworkingOnWindows", true);
 
         ApplicationConfiguration.Initialize();
-        Application.Run(new MainForm());
+        using var form = new MainForm();
+        UiPolish.Apply(form);
+        Application.Run(form);
     }
 }
