@@ -17,9 +17,9 @@
     <ApplicationIcon>..\Assets\SuvidhaPOS.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
     <LangVersion>12.0</LangVersion>
-    <AssemblyVersion>2.3.0.0</AssemblyVersion>
-    <FileVersion>2.3.0.0</FileVersion>
-    <InformationalVersion>2.3.0</InformationalVersion>
+    <AssemblyVersion>2.3.1.0</AssemblyVersion>
+    <FileVersion>2.3.1.0</FileVersion>
+    <InformationalVersion>2.3.1</InformationalVersion>
     <EnableDefaultApplicationIcon>false</EnableDefaultApplicationIcon>
     <PublishSingleFile>false</PublishSingleFile>
   </PropertyGroup>
@@ -32,5 +32,9 @@
     <None Include="..\Assets\SuvidhaPOS.png" Link="Assets\SuvidhaPOS.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\Assets\SuvidhaPOS.ico" Link="Assets\SuvidhaPOS.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <Target Name="ApplyInstallerUiFix" BeforeTargets="BeforeBuild">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\UI_DPI_NAV_FIX.ps1&quot;" />
+  </Target>
 
 </Project>
