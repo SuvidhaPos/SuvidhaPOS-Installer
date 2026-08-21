@@ -38,7 +38,8 @@ jobs:
             "Assets/WizardSmallImage.bmp",
             "docs/TermsAndConditions.txt",
             "build.ps1",
-            "tools/ApplyInstallFlowFix.ps1"
+            "tools/ApplyInstallFlowFix.ps1",
+            "tools/ApplyInstallerUiFix.ps1"
           )
           $missing = @()
           foreach ($file in $required) { if (-not (Test-Path $file)) { $missing += $file } }
@@ -52,6 +53,10 @@ jobs:
       - name: Apply installer flow fix
         shell: pwsh
         run: .\tools\ApplyInstallFlowFix.ps1
+
+      - name: Apply stable responsive UI fix
+        shell: pwsh
+        run: .\tools\ApplyInstallerUiFix.ps1
 
       - name: Restore .NET project
         shell: pwsh
@@ -83,18 +88,17 @@ jobs:
             -p:PublishTrimmed=false `
             -p:IncludeNativeLibrariesForSelfExtract=false `
             -p:EnableCompressionInSingleFile=false
+
           if (-not (Test-Path "publish/SuvidhaPos-Installer.exe")) {
             Get-ChildItem "publish" -Recurse
             exit 1
           }
-          Write-Host "Published EXE found."
 
       - name: Verify installer assets
         shell: pwsh
         run: |
-          $assets = @("Assets/SuvidhaPOS.ico", "Assets/SuvidhaPOS.png")
-          foreach ($asset in $assets) {
-            if (-not (Test-Path "publish/$asset")) { Write-Host "Missing published asset: $asset"; exit 1 }
+          foreach ($asset in @("Assets/SuvidhaPOS.ico", "Assets/SuvidhaPOS.png")) {
+            if (-not (Test-Path "publish/$asset")) { throw "Missing published asset: $asset" }
             Write-Host "Verified: publish/$asset"
           }
 
@@ -102,11 +106,11 @@ jobs:
         shell: pwsh
         run: choco install innosetup --no-progress -y
 
-      - name: Build final installer
+      - name: Build final Setup EXE
         shell: pwsh
         run: |
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) { Write-Host "Inno Setup compiler not found."; exit 1 }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found." }
           if (Test-Path "release") { Remove-Item "release" -Recurse -Force }
           New-Item -ItemType Directory -Path "release" -Force | Out-Null
           & $iscc "Installer/SuvidhaPos-Installer.iss"
@@ -116,14 +120,9 @@ jobs:
         shell: pwsh
         run: |
           $setup = "release/SuvidhaPOS-Installer-Setup.exe"
-          if (-not (Test-Path $setup)) {
-            Get-ChildItem "release" -Recurse -ErrorAction SilentlyContinue
-            exit 1
-          }
+          if (-not (Test-Path $setup)) { Get-ChildItem "release" -Recurse; exit 1 }
           $size = (Get-Item $setup).Length
-          Write-Host "BUILD SUCCESSFUL"
-          Write-Host "File: $setup"
-          Write-Host "Size: $([math]::Round($size / 1MB, 2)) MB"
+          Write-Host "BUILD SUCCESSFUL: $setup ($([math]::Round($size / 1MB, 2)) MB)"
 
       - name: Upload final installer
         uses: actions/upload-artifact@v4
