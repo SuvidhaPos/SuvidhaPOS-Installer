@@ -107,7 +107,7 @@ public sealed class MainForm : Form
 
         Text = "Suvidha POS Installer";
         StartPosition = FormStartPosition.CenterScreen;
-        MinimumSize = new Size(820, 600);
+        MinimumSize = new Size(960, 680);
         Size = new Size(1280, 800);
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Bg;
@@ -168,49 +168,144 @@ public sealed class MainForm : Form
 
     private void BuildShell()
     {
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, BackColor = Bg, Padding = Padding.Empty, Margin = Padding.Empty };
+        var root = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 2,
+            BackColor = Bg,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
+        };
         shellRoot = root;
-        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 328));
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 250));
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 68));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         Controls.Add(root);
 
-        var header = new GradientPanel { Dock = DockStyle.Fill, Padding = new Padding(28, 10, 26, 6), StartColor = Color.FromArgb(4, 17, 36), EndColor = Color.FromArgb(4, 9, 22) };
-        root.Controls.Add(header, 0, 0); root.SetColumnSpan(header, 2);
-        header.Paint += (_, e) => { using var p = new Pen(Color.FromArgb(25, 80, 128)); e.Graphics.DrawLine(p, 0, header.Height - 1, header.Width, header.Height - 1); };
+        var header = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 3,
+            RowCount = 1,
+            BackColor = Color.FromArgb(4, 16, 34),
+            Margin = Padding.Empty,
+            Padding = new Padding(16, 8, 16, 8)
+        };
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 48));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 230));
+        root.Controls.Add(header, 0, 0);
+        root.SetColumnSpan(header, 2);
 
-        var logo = new PictureBox { Size = new Size(52, 52), Location = new Point(26, 9), SizeMode = PictureBoxSizeMode.Zoom, BackColor = Color.Transparent };
-        try { var img = Path.Combine(AppContext.BaseDirectory, "Assets", "SuvidhaPOS.png"); if (File.Exists(img)) logo.Image = Image.FromFile(img); } catch { }
-        header.Controls.Add(logo);
-        var brand = new Label { Text = "Suvidha POS", Font = new Font("Segoe UI Semibold", 22F), ForeColor = TextColor, AutoSize = true, Location = new Point(90, 14) };
-        header.Controls.Add(brand);
-        var installer = new Label { Text = "Installer", Font = new Font("Segoe UI Semibold", 22F), ForeColor = Color.FromArgb(0, 171, 255), AutoSize = true, Location = new Point(224, 14) };
-        header.Controls.Add(installer);
-        headerTitle = new Label { Text = "Welcome", Font = new Font("Segoe UI Semibold", 10.5F), ForeColor = TextColor, AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right };
-        headerSub = new Label { Text = "Guided installation", Font = new Font("Segoe UI", 8.5F), ForeColor = Muted, AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right };
-        header.Controls.Add(headerTitle); header.Controls.Add(headerSub);
-        header.Resize += (_, _) => { headerTitle.Left = header.ClientSize.Width - headerTitle.Width - 26; headerSub.Left = header.ClientSize.Width - headerSub.Width - 26; };
+        var logo = new PictureBox
+        {
+            Dock = DockStyle.Fill,
+            SizeMode = PictureBoxSizeMode.Zoom,
+            BackColor = Color.Transparent,
+            Margin = new Padding(0, 2, 8, 2)
+        };
+        try
+        {
+            var img = Path.Combine(AppContext.BaseDirectory, "Assets", "SuvidhaPOS.png");
+            if (File.Exists(img)) logo.Image = Image.FromFile(img);
+        }
+        catch { }
+        header.Controls.Add(logo, 0, 0);
 
-        sidebar = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, BackColor = SidebarBg, Padding = new Padding(18, 14, 18, 14), Margin = Padding.Empty };
+        var brand = new Label
+        {
+            Text = "Suvidha POS  |  Installer",
+            Dock = DockStyle.Fill,
+            Font = new Font("Segoe UI Semibold", 18F),
+            ForeColor = TextColor,
+            TextAlign = ContentAlignment.MiddleLeft,
+            AutoEllipsis = true,
+            Margin = Padding.Empty
+        };
+        header.Controls.Add(brand, 1, 0);
+
+        var pageInfo = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2,
+            BackColor = Color.Transparent,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
+        };
+        pageInfo.RowStyles.Add(new RowStyle(SizeType.Percent, 58));
+        pageInfo.RowStyles.Add(new RowStyle(SizeType.Percent, 42));
+        header.Controls.Add(pageInfo, 2, 0);
+
+        headerTitle = new Label
+        {
+            Text = "Welcome",
+            Dock = DockStyle.Fill,
+            Font = new Font("Segoe UI Semibold", 10.5F),
+            ForeColor = TextColor,
+            TextAlign = ContentAlignment.MiddleRight,
+            AutoEllipsis = true
+        };
+        headerSub = new Label
+        {
+            Text = "Guided installation",
+            Dock = DockStyle.Fill,
+            Font = new Font("Segoe UI", 8.5F),
+            ForeColor = Muted,
+            TextAlign = ContentAlignment.MiddleRight,
+            AutoEllipsis = true
+        };
+        pageInfo.Controls.Add(headerTitle, 0, 0);
+        pageInfo.Controls.Add(headerSub, 0, 1);
+
+        sidebar = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            AutoScroll = true,
+            BackColor = SidebarBg,
+            Padding = new Padding(10, 12, 10, 12),
+            Margin = Padding.Empty
+        };
         root.Controls.Add(sidebar, 0, 1);
+
         string[] names = { "Welcome", "Terms & Conditions", "Components", "Download", "Install", "Setup & Backup", "Finish" };
         string[] subs = { "Welcome to Installer", "Read important terms", "Select components", "Download installation files", "Install all components", "Database setup & backup", "Installation complete" };
+
         for (int i = 0; i < names.Length; i++)
         {
-            var item = new StepItem(i + 1, names[i], subs[i]) { Width = 292, Height = 88, Tag = i };
-            item.Click += (_, _) => { if (!busy && i <= step) ShowStep(i); };
+            int targetStep = i;
+            var item = new StepItem(i + 1, names[i], subs[i])
+            {
+                Width = 228,
+                Height = 70,
+                Tag = targetStep,
+                Margin = new Padding(0, 0, 0, 7)
+            };
+            item.Click += (_, _) => { if (!busy && targetStep <= step) ShowStep(targetStep); };
             sidebar.Controls.Add(item);
         }
 
-        var help = new HelpCard { Width = 292, Height = 150, Margin = new Padding(0, 14, 0, 0) };
+        var help = new HelpCard
+        {
+            Width = 228,
+            Height = 112,
+            Margin = new Padding(0, 7, 0, 0)
+        };
         sidebar.Controls.Add(help);
 
-        content = new Panel { Dock = DockStyle.Fill, BackColor = Bg, Padding = new Padding(12, 10, 12, 10), AutoScroll = true };
+        content = new Panel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Bg,
+            Padding = new Padding(12, 10, 12, 10),
+            Margin = Padding.Empty
+        };
         root.Controls.Add(content, 1, 1);
 
-        // Responsive shell: preserve the visual proportions while allowing the
-        // installer to run from 800x600 through large 4K/ultrawide displays.
         Resize += (_, _) => ApplyResponsiveShell();
         ApplyResponsiveShell();
     }
@@ -218,64 +313,100 @@ public sealed class MainForm : Form
     private void ApplyResponsiveShell()
     {
         if (shellRoot == null || sidebar == null || content == null) return;
-        var w = ClientSize.Width;
-        var h = ClientSize.Height;
-        var sidebarWidth = Math.Clamp((int)Math.Round(w * 0.2187), 220, 328);
-        var headerHeight = Math.Clamp((int)Math.Round(h * 0.078), 58, 72);
+
+        int w = ClientSize.Width;
+        int h = ClientSize.Height;
+        int sidebarWidth = Math.Clamp((int)Math.Round(w * 0.20), 220, 250);
+        int headerHeight = Math.Clamp((int)Math.Round(h * 0.085), 62, 72);
+
         shellRoot.ColumnStyles[0].Width = sidebarWidth;
         shellRoot.RowStyles[0].Height = headerHeight;
-        sidebar.Padding = new Padding(Math.Clamp(sidebarWidth / 18, 10, 18), 12, Math.Clamp(sidebarWidth / 18, 10, 18), 12);
+
+        int innerWidth = Math.Max(190, sidebarWidth - sidebar.Padding.Horizontal);
         foreach (Control c in sidebar.Controls)
         {
             if (c is StepItem item)
             {
-                item.Width = Math.Max(180, sidebarWidth - sidebar.Padding.Horizontal);
-                item.Height = Math.Clamp((int)Math.Round(h * 0.095), 70, 88);
+                item.Width = innerWidth;
+                item.Height = h < 700 ? 64 : 70;
             }
             else if (c is HelpCard help)
             {
-                help.Width = Math.Max(180, sidebarWidth - sidebar.Padding.Horizontal);
+                help.Width = innerWidth;
+                help.Height = h < 700 ? 92 : 112;
             }
         }
+
+        if (pageBody != null && !pageBody.IsDisposed)
+            pageBody.PerformLayout();
     }
 
     private void BuildFooter(Panel host, string action)
     {
-        var footer = new Panel { Dock = DockStyle.Bottom, Height = 76, BackColor = Color.FromArgb(4, 14, 28), Padding = new Padding(18, 11, 18, 10) };
-        host.Controls.Add(footer);
-        footerStep = new Label { Text = $"Step {step + 1} of 7", ForeColor = Muted, AutoSize = true, Location = new Point(4, 24) };
-        footer.Controls.Add(footerStep);
-        footerProgress = new ProgressBar { Minimum = 0, Maximum = 100, Value = (int)Math.Round(step / 6.0 * 100), Style = ProgressBarStyle.Continuous, Location = new Point(88, 29), Size = new Size(360, 10), Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top };
-        footer.Controls.Add(footerProgress);
-        footerPercent = new Label { Text = $"{(int)Math.Round(step / 6.0 * 100)}%", ForeColor = Muted, AutoSize = true, Location = new Point(462, 24) };
-        footer.Controls.Add(footerPercent);
-
-        cancelButton = MakeButton("Cancel", 112, Color.FromArgb(20, 36, 58));
-        backButton = MakeButton("‹  Back", 110, Color.FromArgb(20, 36, 58));
-        nextButton = MakeGradientButton(action, 160);
-        footer.Controls.Add(cancelButton); footer.Controls.Add(backButton); footer.Controls.Add(nextButton);
-        footer.Resize += (_, _) =>
+        var footer = new TableLayoutPanel
         {
-            nextButton.Left = footer.ClientSize.Width - nextButton.Width - 12;
-            backButton.Left = Math.Max(8, nextButton.Left - backButton.Width - 10);
-            cancelButton.Left = Math.Max(8, backButton.Left - cancelButton.Width - 10);
-            cancelButton.Top = backButton.Top = nextButton.Top = 10;
-            var left = 88;
-            var right = Math.Max(left + 80, cancelButton.Left - 18);
-            footerProgress.Left = left;
-            footerProgress.Width = Math.Max(80, right - left - 70);
-            footerPercent.Left = footerProgress.Right + 10;
+            Dock = DockStyle.Bottom,
+            Height = 64,
+            ColumnCount = 6,
+            RowCount = 1,
+            BackColor = Color.FromArgb(4, 14, 28),
+            Padding = new Padding(10, 8, 10, 8),
+            Margin = Padding.Empty
         };
-        nextButton.Left = footer.ClientSize.Width - nextButton.Width - 12;
-        backButton.Left = Math.Max(8, nextButton.Left - backButton.Width - 10);
-        cancelButton.Left = Math.Max(8, backButton.Left - cancelButton.Width - 10);
-        cancelButton.Top = backButton.Top = nextButton.Top = 10;
-        footerProgress.Left = 88;
-        footerProgress.Width = Math.Max(80, cancelButton.Left - footerProgress.Left - 88);
-        footerPercent.Left = footerProgress.Right + 10;
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 82));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 48));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 94));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 104));
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 144));
+        host.Controls.Add(footer);
+
+        footerStep = new Label
+        {
+            Text = $"Step {step + 1} of 7",
+            ForeColor = Muted,
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleLeft,
+            AutoEllipsis = true
+        };
+        footer.Controls.Add(footerStep, 0, 0);
+
+        footerProgress = new ProgressBar
+        {
+            Minimum = 0,
+            Maximum = 100,
+            Value = (int)Math.Round(step / 6.0 * 100),
+            Style = ProgressBarStyle.Continuous,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(6, 12, 6, 12)
+        };
+        footer.Controls.Add(footerProgress, 1, 0);
+
+        footerPercent = new Label
+        {
+            Text = $"{(int)Math.Round(step / 6.0 * 100)}%",
+            ForeColor = Muted,
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleCenter
+        };
+        footer.Controls.Add(footerPercent, 2, 0);
+
+        cancelButton = MakeButton("Cancel", 88, Color.FromArgb(20, 36, 58));
+        backButton = MakeButton("‹  Back", 98, Color.FromArgb(20, 36, 58));
+        nextButton = MakeGradientButton(action, 138);
+
+        cancelButton.Dock = DockStyle.Fill;
+        backButton.Dock = DockStyle.Fill;
+        nextButton.Dock = DockStyle.Fill;
+        footer.Controls.Add(cancelButton, 3, 0);
+        footer.Controls.Add(backButton, 4, 0);
+        footer.Controls.Add(nextButton, 5, 0);
+
         cancelButton.Click += (_, _) => Close();
         backButton.Click += (_, _) => { if (!busy && step > 0) ShowStep(step - 1); };
         nextButton.Click += NextClicked;
+
+        AcceptButton = nextButton;
     }
 
     private Button MakeButton(string text, int width, Color back)
@@ -287,8 +418,21 @@ public sealed class MainForm : Form
 
     private Button MakeGradientButton(string text, int width)
     {
-        var b = new GradientButton { Text = text, Width = width, Height = 46, StartColor = Color.FromArgb(151, 23, 255), EndColor = Color.FromArgb(255, 139, 22), ForeColor = Color.White, Font = new Font("Segoe UI Semibold", 11F), FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, TabStop = false };
-        b.FlatAppearance.BorderSize = 0;
+        var b = new Button
+        {
+            Text = text,
+            Width = width,
+            Height = 46,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.FromArgb(92, 76, 220),
+            ForeColor = Color.White,
+            Font = new Font("Segoe UI Semibold", 10.5F),
+            Cursor = Cursors.Hand,
+            TabStop = false,
+            UseVisualStyleBackColor = false
+        };
+        b.FlatAppearance.BorderColor = Color.FromArgb(125, 109, 240);
+        b.FlatAppearance.BorderSize = 1;
         return b;
     }
 
@@ -297,6 +441,9 @@ public sealed class MainForm : Form
         step = Math.Clamp(index, 0, 6);
         state.Step = step;
         SaveState();
+        AcceptButton = null;
+        foreach (Control child in content.Controls)
+            child.Dispose();
         content.Controls.Clear();
         busy = false;
         UpdateSidebar();
@@ -320,9 +467,19 @@ public sealed class MainForm : Form
 
     private void StartPage(string title, string subtitle, string action)
     {
-        headerTitle.Text = title; headerSub.Text = subtitle;
+        headerTitle.Text = title;
+        headerSub.Text = subtitle;
         content.Controls.Clear();
-        pageBody = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent, Padding = new Padding(0, 4, 0, 4), AutoScroll = true };
+        content.AutoScroll = false;
+
+        pageBody = new Panel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 4, 0, 4),
+            AutoScroll = true,
+            Margin = Padding.Empty
+        };
         content.Controls.Add(pageBody);
         BuildFooter(content, action);
     }
@@ -339,13 +496,14 @@ public sealed class MainForm : Form
             AutoSize = false,
             BackColor = Color.Transparent,
             Margin = Padding.Empty,
-            Padding = Padding.Empty
+            Padding = Padding.Empty,
+            Height = 526
         };
-        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 246));
-        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 96));
+        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 220));
+        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 86));
         stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 190));
-        stack.Size = new Size(Math.Max(1, pageBody.ClientSize.Width - 4), 532);
         pageBody.Controls.Add(stack);
+        stack.Width = Math.Max(1, pageBody.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4);
 
         var hero = new RoundedCard
         {
@@ -514,29 +672,12 @@ public sealed class MainForm : Form
 
         pageBody.Resize += (_, _) =>
         {
-            stack.Width = Math.Max(1, pageBody.ClientSize.Width - 4);
-            if (stack.Width < 720)
-            {
-                heroGrid.ColumnStyles[0].Width = 145;
-                title1.Font = new Font("Segoe UI Semibold", 20F);
-                desc.Font = new Font("Segoe UI", 9.5F);
-            }
-            else
-            {
-                heroGrid.ColumnStyles[0].Width = 190;
-                title1.Font = new Font("Segoe UI Semibold", 25F);
-                desc.Font = new Font("Segoe UI", 11F);
-            }
+            stack.Width = Math.Max(1, pageBody.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4);
+            bool compact = stack.Width < 720;
+            heroGrid.ColumnStyles[0].Width = compact ? 140 : 175;
+            title1.Font = new Font("Segoe UI Semibold", compact ? 19F : 22F);
+            desc.Font = new Font("Segoe UI", compact ? 9F : 10F);
         };
-    }
-
-    private FeatureCard AddFeature(Control parent, int x, int y, string icon, string title, string sub, Color color)
-    {
-        var c = new FeatureCard { Size = new Size(175, 84), Location = new Point(x, y), Accent = color }; parent.Controls.Add(c);
-        c.Controls.Add(new Label { Text = icon, Font = new Font("Segoe UI Symbol", 25F), ForeColor = color, AutoSize = true, Location = new Point(12, 12) });
-        c.Controls.Add(new Label { Text = title, Font = new Font("Segoe UI Semibold", 10F), ForeColor = TextColor, AutoSize = true, Location = new Point(54, 15) });
-        c.Controls.Add(new Label { Text = sub, Font = new Font("Segoe UI", 8.5F), ForeColor = Color.FromArgb(62, 255, 88), AutoSize = true, Location = new Point(54, 43) });
-        return c;
     }
 
     private Control CreateChecklistCard(string title, string[] lines)
@@ -1397,36 +1538,24 @@ public sealed class MainForm : Form
 
     private class RoundedCard : Panel
     {
-        public RoundedCard() { BackColor = Color.FromArgb(6, 24, 50); Padding = new Padding(10); Margin = new Padding(0); DoubleBuffered = true; }
-        protected override void OnPaint(PaintEventArgs e)
+        public RoundedCard()
         {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            // Clear the previous frame first. Without this, rounded cards can leave
-            // repeated border trails/artifacts when the window is resized or DPI changes.
-            e.Graphics.Clear(Parent?.BackColor ?? Color.FromArgb(4, 12, 25));
-            using var path = RoundRect(new Rectangle(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1)), 12);
-            using var b = new SolidBrush(BackColor);
-            e.Graphics.FillPath(b, path);
-            using var p = new Pen(Color.FromArgb(22, 78, 129));
-            e.Graphics.DrawPath(p, path);
-            base.OnPaint(e);
+            BackColor = Color.FromArgb(6, 24, 50);
+            BorderStyle = BorderStyle.FixedSingle;
+            Padding = new Padding(10);
+            Margin = Padding.Empty;
         }
-        private static GraphicsPath RoundRect(Rectangle r, int radius) { var p = new GraphicsPath(); int d = radius * 2; p.AddArc(r.X, r.Y, d, d, 180, 90); p.AddArc(r.Right - d, r.Y, d, d, 270, 90); p.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90); p.AddArc(r.X, r.Bottom - d, d, d, 90, 90); p.CloseFigure(); return p; }
     }
 
     private sealed class FeatureCard : Panel
     {
-        public Color Accent { get; set; } = Color.Blue;
-        public FeatureCard() { BackColor = Color.FromArgb(5, 27, 55); DoubleBuffered = true; }
-        protected override void OnPaint(PaintEventArgs e)
+        public Color Accent { get; set; } = Color.FromArgb(0, 166, 255);
+
+        public FeatureCard()
         {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            e.Graphics.Clear(Parent?.BackColor ?? Color.FromArgb(4, 12, 25));
-            using var b = new SolidBrush(BackColor);
-            e.Graphics.FillRectangle(b, ClientRectangle);
-            using var p = new Pen(Color.FromArgb(30, Accent.R, Accent.G, Accent.B));
-            e.Graphics.DrawRectangle(p, 0, 0, Math.Max(0, Width - 1), Math.Max(0, Height - 1));
-            base.OnPaint(e);
+            BackColor = Color.FromArgb(5, 27, 55);
+            BorderStyle = BorderStyle.FixedSingle;
+            DoubleBuffered = true;
         }
     }
 
@@ -1441,6 +1570,7 @@ public sealed class MainForm : Form
             get => done;
             set { done = value; number.Text = done ? "✓" : number.Tag?.ToString() ?? ""; Invalidate(); }
         }
+
         public bool Compact
         {
             get => compact;
@@ -1457,6 +1587,7 @@ public sealed class MainForm : Form
 
         public StepItem(int n, string name, string subtitle)
         {
+            DoubleBuffered = true;
             number = new Label
             {
                 Text = n.ToString(),
@@ -1506,11 +1637,16 @@ public sealed class MainForm : Form
 
         private static Color MutedStatic => Color.FromArgb(154, 177, 202);
 
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            using var brush = new SolidBrush(
+                active ? Color.FromArgb(25, 23, 100, 170) : Color.FromArgb(7, 23, 44));
+            e.Graphics.FillRectangle(brush, ClientRectangle);
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            using var bg = new SolidBrush(active ? Color.FromArgb(30, 23, 100, 170) : Color.FromArgb(7, 23, 44));
-            e.Graphics.FillRectangle(bg, ClientRectangle);
             using var p = new Pen(active ? Color.FromArgb(0, 180, 255) : Color.FromArgb(22, 60, 96));
             e.Graphics.DrawRectangle(p, 0, 0, Math.Max(0, Width - 1), Math.Max(0, Height - 1));
             var size = compact ? 42 : 38;
@@ -1547,6 +1683,7 @@ public sealed class MainForm : Form
         public HelpCard()
         {
             BackColor = Color.FromArgb(6, 24, 50);
+            BorderStyle = BorderStyle.FixedSingle;
             Padding = new Padding(10);
             DoubleBuffered = true;
 
@@ -1660,27 +1797,6 @@ public sealed class MainForm : Form
         }
     }
 
-    private sealed class GradientPanel : Panel
-    {
-        public Color StartColor { get; set; } = Color.Black; public Color EndColor { get; set; } = Color.Black;
-        protected override void OnPaintBackground(PaintEventArgs e) { using var b = new LinearGradientBrush(ClientRectangle, StartColor, EndColor, 0F); e.Graphics.FillRectangle(b, ClientRectangle); }
-    }
 
-    private sealed class GradientLabel : Label
-    {
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            using var path = new GraphicsPath();
-            path.AddString(Text, Font.FontFamily, (int)Font.Style, Font.Size * e.Graphics.DpiY / 72f, new PointF(0, 0), StringFormat.GenericDefault);
-            using var brush = new LinearGradientBrush(ClientRectangle, Color.FromArgb(115, 87, 255), Color.FromArgb(255, 65, 72), 0F);
-            e.Graphics.FillPath(brush, path);
-        }
-    }
 
-    private sealed class GradientButton : Button
-    {
-        public Color StartColor { get; set; } = Color.Purple; public Color EndColor { get; set; } = Color.Orange;
-        protected override void OnPaint(PaintEventArgs e) { e.Graphics.SmoothingMode = SmoothingMode.AntiAlias; using var b = new LinearGradientBrush(ClientRectangle, StartColor, EndColor, 0F); e.Graphics.FillRectangle(b, ClientRectangle); TextRenderer.DrawText(e.Graphics, Text, Font, ClientRectangle, ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter); }
-    }
 }

@@ -1,24 +1,46 @@
-Suvidha POS Installer V2.2 - UI + Download Cross Check
+V2.3 FINAL SOURCE CROSS-CHECK
 
-Verified source changes:
-- Responsive shell uses DPI scaling and collapsible navigation at narrow widths.
-- Welcome page no longer uses fixed-position title/feature blocks that can overlap.
-- Terms page uses docked layout instead of fixed 900x500 controls.
-- Components, Download, Install and Setup pages use TableLayoutPanel/FlowLayoutPanel sizing.
-- Footer uses a responsive table layout for progress + buttons.
-- Sidebar switches to compact numbered navigation on narrow windows.
-- Custom painted cards/buttons remain double-buffered to reduce flicker.
-- No HorizontalScroll property is used on generic Control.
-- Software directory is exactly: D:\Suvidha Pos\Software
-- Download targets are flat files directly inside that directory.
-- No DownloadDir/AppData software download directory is used.
-- Local MSI, VC++ and backup checks use TopDirectoryOnly for the software folder.
-- Existing files in D:\Suvidha Pos\Software are reused.
-- The installed installer application path is exactly C:\Suvidha Soft Installer.
-- SQL Server/SSMS/Crystal download logic remains intact.
-- x64 self-contained .NET 8 build and Inno Setup packaging remain intact.
-- GitHub Actions performs the final authoritative Windows build.
+Checked all source/configuration files in the clean release tree.
 
-Important:
-- This environment does not contain the Windows .NET SDK/Inno Setup compiler, so the attached package is source/build-ready, not a falsely claimed locally compiled Windows EXE.
-- The GitHub Actions workflow must finish successfully before treating the Setup EXE as release-ready.
+1. UI entry:
+   Installer/Program.cs -> Application.Run(new MainForm()).
+
+2. UI generation:
+   Installer/MainForm.cs is the only application UI source.
+   Installer/UiPolish.cs is absent.
+
+3. UI shell:
+   Header, sidebar, content and footer are separate layout regions.
+   content.AutoScroll is not used.
+   pageBody is the only scrollable page region.
+   Footer is outside pageBody.
+
+4. Navigation:
+   NextClicked is wired directly to the current Next button.
+   AcceptButton = nextButton is set after each page is built.
+   Back and Cancel are direct handlers.
+
+5. Forbidden stale constructs:
+   No HorizontalScroll usage.
+   No DownloadDir field.
+   No legacy UI patch script.
+   No UiPolish helper.
+
+6. Software folder:
+   Exact folder: D:\Suvidha Pos\Software
+   Local checks use TopDirectoryOnly.
+   No component download subfolders are created.
+
+7. Application install folder:
+   Inno Setup uses {autopf}\Suvidha Soft Installer.
+
+8. Build:
+   .NET 8, x64, self-contained, folder publish.
+   PublishSingleFile=false.
+   Inno Setup packages the full publish folder.
+
+9. Repository cleanliness:
+   Removed obsolete APPLY_UI_FIX.ps1, PATCH_INSTRUCTIONS.txt,
+   PATCH_README.txt, Installer/UiPolish.cs and old changelog-only files.
+
+Local Windows compilation cannot be truthfully claimed from this Linux build environment. GitHub Actions is configured as the authoritative Windows build.

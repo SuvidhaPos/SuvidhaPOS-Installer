@@ -1,8 +1,19 @@
-# SuvidhaPOS Installer V2
+# Suvidha POS Installer V2.3
 
-Premium .NET 8 x64 Windows installer for Suvidha POS (responsive UI build 2.2.0).
+Clean .NET 8 WinForms x64 installer source.
 
-## Exact 7-step flow
+## UI architecture
+
+- Fixed header.
+- Fixed left navigation.
+- Only the page body scrolls.
+- Footer is outside the scrollable page body.
+- `Next`, `Back` and `Cancel` are created once per page and wired directly.
+- No generic `Control.HorizontalScroll`.
+- Per-monitor DPI scaling is enabled.
+- Layout uses WinForms `TableLayoutPanel`, `FlowLayoutPanel` and dock/anchor rules instead of page-wide absolute positioning.
+
+## Seven steps
 
 1. Welcome
 2. Terms & Conditions
@@ -12,31 +23,30 @@ Premium .NET 8 x64 Windows installer for Suvidha POS (responsive UI build 2.2.0)
 6. Setup & Backup
 7. Finish
 
-The UI is the premium dark-blue Suvidha POS design: branded header, 7-step sidebar, feature cards, component cards, progress bars, gradient action buttons and installation summary.
+## File locations
 
-## Installation behavior
+The installer always checks/downloads/reuses files directly in:
 
-- SQL Server 2019 and SSMS are launched as their normal Microsoft setup programs, so the user can select **Default Instance**, authentication mode and other setup options manually.
-- Crystal Reports Runtime is installed through MSI.
-- **Every installer/download/check uses exactly `D:\Suvidha Pos\Software` as the software directory.**
-- **No software subfolders are created by the installer.** SQL Server, SSMS, Crystal Reports, VC++ and Suvidha POS files are kept directly in that one folder.
-- Existing downloaded installers are reused.
-- Progress is saved to `%ProgramData%\SuvidhaPOS\Installer\resume.json`.
-- A Windows Scheduled Task named `SuvidhaPOS Installer Resume` relaunches the installer at logon while setup is incomplete.
-- If Windows restarts or the PC is powered off during setup, the wizard returns to the saved step after login.
-- Database restore uses Windows authentication and `Microsoft.Data.SqlClient`.
-- The setup page detects `SuvidhaPos.exe.config` or `RetailPos.exe.config` and updates the `sqlKey` value to `Data Source=<server>;Initial Catalog=<database>;Integrated Security=True`.
-- Finish provides **Launch Suvidha POS**.
+`D:\Suvidha Pos\Software`
 
-## Required local files
+No component subfolders are created there.
 
-Put the Suvidha POS MSI, optional VC++ redistributable and `.bak` backup under `D:\Suvidha Pos\Software` when those files are needed.
+After installation, the installer application is installed in:
 
-## GitHub build
+`C:\Program Files\Suvidha Soft Installer`
 
-The repository contains one workflow only: `.github/workflows/build.yml`. It verifies the required source/assets, restores and builds .NET 8, publishes self-contained `win-x64`, installs Inno Setup 6, builds `release/SuvidhaPOS-Installer-Setup.exe`, and uploads the final installer artifact.
+## Build
 
-Do not commit customer database backups or private installer binaries.
+Requires Windows, .NET 8 SDK and Inno Setup 6.
 
-## Side-by-side error 14001 fix
-The GitHub workflow now publishes the installer as a self-contained `win-x64` folder rather than a single-file executable. Inno Setup packages the full publish output. This avoids the native single-file startup path that can produce `CreateProcess failed; code 14001` on some Windows machines.
+Run:
+
+```powershell
+.\build.ps1
+```
+
+The authoritative GitHub Actions workflow performs the same folder-based, self-contained `win-x64` publish.
+
+## Release verification
+
+The workflow rejects the old UI patch files and checks the source for obsolete UI/download constructs before building.

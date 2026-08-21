@@ -1,19 +1,27 @@
-Suvidha POS Installer V2 - Stable Premium UI
+V2.3 UI STABILITY CHECKLIST
 
-UI changes:
-- Replaced custom GDI/gradient OnPaint controls with normal WinForms Panel/Label/Button controls.
-- Enabled WinForms DPI scaling.
-- Removed fixed 720px minimum card sizing that could overflow at 800x600.
-- Kept the Suvidha POS logo and existing 7-step installer flow.
-- Kept download/install/database/resume logic unchanged.
-- Kept Windows logon Scheduled Task resume behavior unchanged.
-- Added build-time validation so the unstable renderer cannot be reintroduced accidentally.
+The previous UI tree contained patch scripts and an unused UiPolish.cs. Those files are removed from this release tree.
 
-Supported target range:
-- Minimum window: 800x600.
-- Responsive sidebar/content sizing up through large desktop resolutions.
-- Native WinForms controls are used for reliable repainting during resize and DPI changes.
+Root layout:
+- Header: fixed
+- Sidebar: fixed
+- Content host: fixed
+- Page body: the only scrollable region
+- Footer: fixed and outside the page body's scrollable region
 
-Important:
-- Build this package on Windows with .NET 8 SDK and Inno Setup 6.
-- GitHub Actions contains the only build workflow: .github/workflows/build.yml.
+Navigation:
+- One Next button per page
+- One Back button per page
+- Direct Click handlers
+- Form AcceptButton points to the current Next button
+- Sidebar items are enabled only for reached steps
+
+DPI:
+- ApplicationHighDpiMode=PerMonitorV2
+- MainForm AutoScaleMode=Dpi
+
+Download/check folder:
+D:\Suvidha Pos\Software
+
+Installer application folder:
+C:\Program Files\Suvidha Soft Installer

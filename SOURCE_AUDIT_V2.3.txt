@@ -1,0 +1,32 @@
+Suvidha POS Installer V2.3 - COMPLETE FILE AUDIT
+
+Every file in this release tree was inspected for UI generation, application launch, build/package behavior, paths and stale patch artifacts.
+
+.github/workflows/build.yml | GitHub authoritative Windows build; clean-tree + UI invariant checks + publish + Inno Setup.
+Assets/SuvidhaPOS.ico | Application/installer icon; used by csproj and Inno Setup.
+Assets/SuvidhaPOS.png | Runtime UI logo; copied to publish output and loaded by MainForm.
+BUILD_NOTES.txt | Fresh V2.3 build notes; no executable payload.
+BUILD_START.txt | Fresh V2.3 build instructions.
+FINAL_CROSS_CHECK.txt | Fresh source-level verification checklist.
+Installer/MainForm.cs | Single application UI and installer workflow implementation.
+Installer/Program.cs | Application entry point; initializes WinForms and launches MainForm.
+Installer/SuvidhaPos-Installer.csproj | Only .NET project; net8.0-windows, x64, PerMonitorV2.
+Installer/SuvidhaPos-Installer.iss | Inno Setup package; installs to {autopf}\Suvidha Soft Installer.
+Installer/app.manifest | Requires administrator privileges.
+README.md | Fresh V2.3 architecture/path/build documentation.
+SuvidhaPos-Installer.sln | Visual Studio solution containing the one application project.
+UI_STABILITY_NOTES.txt | Fresh V2.3 UI stability checklist.
+build.ps1 | Local Windows build equivalent to GitHub build; folder publish, not single-file.
+docs/TermsAndConditions.txt | Installer terms content.
+
+Intentionally removed from the old tree:
+APPLY_UI_FIX.ps1
+PATCH_INSTRUCTIONS.txt
+PATCH_README.txt
+Installer/UiPolish.cs
+CHANGELOG_V2.2.0.txt
+CHANGELOG_V2.2.1.txt
+Assets/WizardImage.bmp
+Assets/WizardSmallImage.bmp
+
+No old patch file is included in this V2.3 release tree.

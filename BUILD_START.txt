@@ -1,9 +1,9 @@
-SuvidhaPOS Installer V2 - Build Start
+SuvidhaPOS Installer V2.3 - Clean Build Start
 
 GitHub:
 1. Push this complete folder to the repository's main branch.
 2. Open GitHub -> Actions.
-3. Select "Build SuvidhaPos-Installer".
+3. Select "Build Suvidha POS Installer".
 4. If no automatic run appears, select "Run workflow" -> branch main -> "Run workflow".
 5. Wait for the Windows job to finish.
 6. Download artifact "SuvidhaPos-Installer-Windows-x64".
