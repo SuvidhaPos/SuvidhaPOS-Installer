@@ -28,12 +28,9 @@ internal static class RuntimeFix
     public static void Apply(MainForm form)
     {
         form.AutoScaleMode = AutoScaleMode.None;
-        form.FormBorderStyle = FormBorderStyle.FixedSingle;
-        form.MaximizeBox = false;
-        form.MinimizeBox = true;
-        form.ClientSize = new Size(1366, 768);
-        form.MinimumSize = form.Size;
-        form.MaximumSize = form.Size;
+        form.MinimumSize = new Size(1024, 768);
+        if (form.ClientSize.Width < 1024 || form.ClientSize.Height < 768)
+            form.ClientSize = new Size(1366, 768);
 
         NormalizeSupportNumber(form);
 
@@ -53,6 +50,7 @@ internal static class RuntimeFix
             StartVcPrefetchIfNeeded(form);
         };
     }
+
 
     private static void NormalizeSupportNumber(Control root)
     {
