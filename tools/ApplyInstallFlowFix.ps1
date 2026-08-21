@@ -4,6 +4,16 @@ Set-StrictMode -Version Latest
 $path = Join-Path $PSScriptRoot '..\Installer\MainForm.cs'
 $text = Get-Content -Raw -LiteralPath $path
 
+# Make the source itself DPI-stable before controls are created. Runtime changes are too late
+# for fixed-height WinForms cards because scaling has already happened in the constructor.
+$text = $text -replace 'AutoScaleMode = AutoScaleMode\.Dpi;', 'AutoScaleMode = AutoScaleMode.None;'
+$text = $text -replace '\bMinimumSize = new Size\(960, 680\);', 'MinimumSize = new Size(1024, 768);'
+$text = $text -replace '\bSize = new Size\(1280, 800\);', 'Size = new Size(1366, 768);'
+$text = $text.Replace('+91 70042 52545', '+91 827171 8844')
+$text = $text.Replace('"Setup & Backup"', '"Setup Database"')
+$text = $text.Replace('"Database setup & backup"', '"Database setup"')
+$text = $text.Replace('SQL Server setup remains interactive so you can choose Default Instance, authentication and other Microsoft setup options.', 'SQL Server is configured automatically by the installer so you can continue through the seven installer steps without leaving this wizard.')
+
 $pattern = '(?s)    private static async Task RunInstallerAsync\(string path, ComponentKind kind\)\s*\{.*?\r?\n    \}\r?\n\r?\n    private async Task RestoreOnlyAsync'
 
 $replacement = @'
@@ -25,8 +35,6 @@ $replacement = @'
         else if (fileName.Contains("SQL Server 2019", StringComparison.OrdinalIgnoreCase))
         {
             // SQL Server 2019 Express is installed unattended inside Step 5.
-            // Microsoft documents /Q, /ACTION=Install, /FEATURES, /INSTANCENAME,
-            // /IACCEPTSQLSERVERLICENSETERMS and /ADDCURRENTUSERASSQLADMIN for this flow.
             if (IsSqlServerInstancePresent())
             {
                 installSummary.Text = "SQL Server instance already installed — continuing.";
@@ -106,4 +114,4 @@ if ($match.Count -ne 1) {
 
 $updated = [regex]::Replace($text, $pattern, $replacement, 1)
 Set-Content -LiteralPath $path -Value $updated -Encoding UTF8
-Write-Host "Applied seven-step silent installer flow fix to $path"
+Write-Host "Applied seven-step silent installer flow and responsive UI fixes to $path"
