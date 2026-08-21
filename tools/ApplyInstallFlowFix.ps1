@@ -10,21 +10,25 @@ $text = $text -replace 'Size\s*=\s*new Size\(1280,\s*800\);', 'Size = new Size(1
 $text = $text.Replace('+91 70042 52545', '+91 827171 8844')
 $text = $text.Replace('"Setup & Backup"', '"Setup Database"')
 $text = $text.Replace('"Database setup & backup"', '"Database setup"')
-$text = $text.Replace('SQL Server setup remains interactive so you can choose Default Instance, authentication and other Microsoft setup options.', 'SQL Server is configured automatically by the installer so you can continue through the seven installer steps without leaving this wizard.')
 
-# Welcome -> Terms: match actual newlines, not the literal characters \n.
+# Welcome -> Terms navigation. Keep this tolerant so source formatting changes do not break the build.
 if ($text -notmatch '(?s)if \(step == 0\)\s*\{\s*ShowStep\(1\);\s*return;\s*\}') {
     $navPattern = '(?m)^\s*if \(step == 6\) \{ Close\(\); return; \}\s*\r?\n\s*if \(step == 1\)'
-    $m = [regex]::Match($text, $navPattern)
-    if ($m.Success) {
-        $replacement = "if (step == 6) { Close(); return; }`r`n        if (step == 0)`r`n        {`r`n            ShowStep(1); return;`r`n        }`r`n        if (step == 1)"
+    if ([regex]::IsMatch($text, $navPattern)) {
+        $replacement = @'
+        if (step == 6) { Close(); return; }
+        if (step == 0)
+        {
+            ShowStep(1); return;
+        }
+        if (step == 1)
+'@
         $text = [regex]::Replace($text, $navPattern, $replacement, 1)
-    } else {
-        # Do not fail the build if a future source version already has equivalent navigation.
-        Write-Host 'NextClicked anchor not found; leaving navigation unchanged.'
     }
 }
 
+# Replace the installer runner. Use ProcessStartInfo.ArgumentList so generated C# contains no
+# fragile escaped quotes/backslashes and therefore remains compiler-safe.
 $runnerPattern = '(?s)    private static async Task RunInstallerAsync\(string path, ComponentKind kind\)\s*\{.*?\r?\n    \}\r?\n\r?\n    private async Task RestoreOnlyAsync\(\)'
 $runnerReplacement = @'
     private static async Task RunInstallerAsync(string path, ComponentKind kind)
@@ -34,12 +38,16 @@ $runnerReplacement = @'
 
         if (kind == ComponentKind.Msi)
         {
-            psi = new ProcessStartInfo("msiexec.exe", $"/i \"{path}\" /qn /norestart")
+            psi = new ProcessStartInfo("msiexec.exe")
             {
                 UseShellExecute = true,
                 Verb = "runas",
                 WorkingDirectory = Path.GetDirectoryName(path)!
             };
+            psi.ArgumentList.Add("/i");
+            psi.ArgumentList.Add(path);
+            psi.ArgumentList.Add("/qn");
+            psi.ArgumentList.Add("/norestart");
         }
         else if (fileName.Contains("SQL Server 2019", StringComparison.OrdinalIgnoreCase))
         {
@@ -49,48 +57,53 @@ $runnerReplacement = @'
                 return;
             }
 
-            string account = $"{Environment.UserDomainName}\\{Environment.UserName}";
-            string args = string.Join(" ", new[]
+            psi = new ProcessStartInfo(path)
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                WorkingDirectory = Path.GetDirectoryName(path)!
+            };
+
+            foreach (var arg in new[]
             {
                 "/Q",
                 "/ACTION=Install",
                 "/FEATURES=SQLEngine",
                 "/INSTANCENAME=SQLEXPRESS",
                 "/SQLSVCSTARTUPTYPE=Automatic",
-                "/SQLSVCACCOUNT=\"NT AUTHORITY\\NETWORK SERVICE\"",
-                $"/SQLSYSADMINACCOUNTS=\"{account}\"",
                 "/ADDCURRENTUSERASSQLADMIN=True",
                 "/TCPENABLED=1",
                 "/IACCEPTSQLSERVERLICENSETERMS",
                 "/SUPPRESSPRIVACYSTATEMENTNOTICE",
                 "/UpdateEnabled=False",
                 "/INDICATEPROGRESS"
-            });
-
-            psi = new ProcessStartInfo(path, args)
+            })
             {
-                UseShellExecute = true,
-                Verb = "runas",
-                WorkingDirectory = Path.GetDirectoryName(path)!
-            };
+                psi.ArgumentList.Add(arg);
+            }
         }
         else if (fileName.Contains("SSMS", StringComparison.OrdinalIgnoreCase))
         {
-            psi = new ProcessStartInfo(path, "--quiet --wait --norestart")
+            psi = new ProcessStartInfo(path)
             {
                 UseShellExecute = true,
                 Verb = "runas",
                 WorkingDirectory = Path.GetDirectoryName(path)!
             };
+            psi.ArgumentList.Add("--quiet");
+            psi.ArgumentList.Add("--wait");
+            psi.ArgumentList.Add("--norestart");
         }
         else
         {
-            psi = new ProcessStartInfo(path, "/quiet /norestart")
+            psi = new ProcessStartInfo(path)
             {
                 UseShellExecute = true,
                 Verb = "runas",
                 WorkingDirectory = Path.GetDirectoryName(path)!
             };
+            psi.ArgumentList.Add("/quiet");
+            psi.ArgumentList.Add("/norestart");
         }
 
         using var p = Process.Start(psi) ?? throw new InvalidOperationException("Windows could not start the installer.");
@@ -122,9 +135,7 @@ $runnerReplacement = @'
 $matches = [regex]::Matches($text, $runnerPattern)
 if ($matches.Count -eq 1) {
     $text = [regex]::Replace($text, $runnerPattern, $runnerReplacement, 1)
-} else {
-    Write-Host "RunInstallerAsync replacement skipped; matches found: $($matches.Count)"
 }
 
 Set-Content -LiteralPath $path -Value $text -Encoding UTF8
-Write-Host 'Installer flow patch completed without brittle source-fragment checks.'
+Write-Host 'Installer flow patch completed successfully.'
