@@ -1401,7 +1401,7 @@ public sealed class MainForm : Form
         MarkDone("installation"); installSummary.Text = "All selected components have finished. Click Next for database setup."; busy = false; SetButtons(true);
     }
 
-    private static async Task RunInstallerAsync(string path, ComponentKind kind)
+    private async Task RunInstallerAsync(string path, ComponentKind kind)
     {
         string fileName = Path.GetFileName(path);
         ProcessStartInfo psi;
