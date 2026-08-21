@@ -50,3 +50,7 @@ The authoritative GitHub Actions workflow performs the same folder-based, self-c
 ## Release verification
 
 The workflow rejects the old UI patch files and checks the source for obsolete UI/download constructs before building.
+
+## UI build safety
+
+The reference UI skin does not access protected WinForms members such as `Control.DoubleBuffered`.
