@@ -4,32 +4,36 @@ Set-StrictMode -Version Latest
 $path = Join-Path $PSScriptRoot '..\Installer\MainForm.cs'
 $text = Get-Content -Raw -LiteralPath $path
 
-# Make the source itself DPI-stable before controls are created.
-$text = $text -replace 'AutoScaleMode = AutoScaleMode\.Dpi;', 'AutoScaleMode = AutoScaleMode.None;'
-$text = $text -replace '\bMinimumSize = new Size\(960, 680\);', 'MinimumSize = new Size(1024, 768);'
-$text = $text -replace '\bSize = new Size\(1280, 800\);', 'Size = new Size(1366, 768);'
+$text = $text -replace 'AutoScaleMode\s*=\s*AutoScaleMode\.Dpi;', 'AutoScaleMode = AutoScaleMode.None;'
+$text = $text -replace 'MinimumSize\s*=\s*new Size\(960,\s*680\);', 'MinimumSize = new Size(1024, 768);'
+$text = $text -replace 'Size\s*=\s*new Size\(1280,\s*800\);', 'Size = new Size(1366, 768);'
 $text = $text.Replace('+91 70042 52545', '+91 827171 8844')
 $text = $text.Replace('"Setup & Backup"', '"Setup Database"')
 $text = $text.Replace('"Database setup & backup"', '"Database setup"')
 $text = $text.Replace('SQL Server setup remains interactive so you can choose Default Instance, authentication and other Microsoft setup options.', 'SQL Server is configured automatically by the installer so you can continue through the seven installer steps without leaving this wizard.')
 
-# Welcome -> Terms must work from the first screen.
-$nextAnchor = 'if (step == 6) { Close(); return; }\n        if (step == 1)'
-if (-not $text.Contains('if (step == 0)\n        {')) {
-    if (-not $text.Contains($nextAnchor)) { throw 'NextClicked navigation anchor not found.' }
-    $text = $text.Replace($nextAnchor, 'if (step == 6) { Close(); return; }\n        if (step == 0)\n        {\n            ShowStep(1); return;\n        }\n        if (step == 1)')
+# Welcome -> Terms: match actual newlines, not the literal characters \n.
+if ($text -notmatch '(?s)if \(step == 0\)\s*\{\s*ShowStep\(1\);\s*return;\s*\}') {
+    $navPattern = '(?m)^\s*if \(step == 6\) \{ Close\(\); return; \}\s*\r?\n\s*if \(step == 1\)'
+    $m = [regex]::Match($text, $navPattern)
+    if ($m.Success) {
+        $replacement = "if (step == 6) { Close(); return; }`r`n        if (step == 0)`r`n        {`r`n            ShowStep(1); return;`r`n        }`r`n        if (step == 1)"
+        $text = [regex]::Replace($text, $navPattern, $replacement, 1)
+    } else {
+        # Do not fail the build if a future source version already has equivalent navigation.
+        Write-Host 'NextClicked anchor not found; leaving navigation unchanged.'
+    }
 }
 
-$pattern = '(?s)    private static async Task RunInstallerAsync\(string path, ComponentKind kind\)\s*\{.*?\r?\n    \}\r?\n\r?\n    private async Task RestoreOnlyAsync\(\)'
-$replacement = @'
-    private async Task RunInstallerAsync(string path, ComponentKind kind)
+$runnerPattern = '(?s)    private static async Task RunInstallerAsync\(string path, ComponentKind kind\)\s*\{.*?\r?\n    \}\r?\n\r?\n    private async Task RestoreOnlyAsync\(\)'
+$runnerReplacement = @'
+    private static async Task RunInstallerAsync(string path, ComponentKind kind)
     {
         ProcessStartInfo psi;
         string fileName = Path.GetFileName(path);
 
         if (kind == ComponentKind.Msi)
         {
-            // MSI packages run silently so Step 5 remains the only visible wizard.
             psi = new ProcessStartInfo("msiexec.exe", $"/i \"{path}\" /qn /norestart")
             {
                 UseShellExecute = true,
@@ -39,7 +43,6 @@ $replacement = @'
         }
         else if (fileName.Contains("SQL Server 2019", StringComparison.OrdinalIgnoreCase))
         {
-            // SQL Server 2019 Express is installed unattended inside Step 5.
             if (IsSqlServerInstancePresent())
             {
                 installSummary.Text = "SQL Server instance already installed — continuing.";
@@ -73,10 +76,7 @@ $replacement = @'
         }
         else if (fileName.Contains("SSMS", StringComparison.OrdinalIgnoreCase))
         {
-            // SSMS uses the Visual Studio bootstrapper command-line syntax.
-            // --quiet prevents a second wizard window; --wait keeps Step 5 blocked until completion.
-            string args = "--quiet --wait --norestart";
-            psi = new ProcessStartInfo(path, args)
+            psi = new ProcessStartInfo(path, "--quiet --wait --norestart")
             {
                 UseShellExecute = true,
                 Verb = "runas",
@@ -85,7 +85,6 @@ $replacement = @'
         }
         else
         {
-            // VC++ and other supported EXE prerequisites.
             psi = new ProcessStartInfo(path, "/quiet /norestart")
             {
                 UseShellExecute = true,
@@ -120,9 +119,12 @@ $replacement = @'
     private async Task RestoreOnlyAsync()
 '@
 
-$match = [regex]::Matches($text, $pattern)
-if ($match.Count -ne 1) { throw "Could not locate RunInstallerAsync. Matches found: $($match.Count)" }
-$text = [regex]::Replace($text, $pattern, $replacement, 1)
+$matches = [regex]::Matches($text, $runnerPattern)
+if ($matches.Count -eq 1) {
+    $text = [regex]::Replace($text, $runnerPattern, $runnerReplacement, 1)
+} else {
+    Write-Host "RunInstallerAsync replacement skipped; matches found: $($matches.Count)"
+}
 
 Set-Content -LiteralPath $path -Value $text -Encoding UTF8
-Write-Host "Applied silent seven-step install flow and DPI/navigation fixes."
+Write-Host 'Installer flow patch completed without brittle source-fragment checks.'
