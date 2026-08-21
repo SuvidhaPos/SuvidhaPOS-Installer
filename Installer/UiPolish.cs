@@ -36,7 +36,6 @@ internal static class UiPolish
         form.BackColor = Bg;
         form.ForeColor = Text;
         form.Font = new Font("Segoe UI", 10F);
-        form.DoubleBuffered = true;
 
         var shell = Field<TableLayoutPanel>(form, "shellRoot");
         var sidebar = Field<FlowLayoutPanel>(form, "sidebar");
@@ -114,7 +113,7 @@ internal static class UiPolish
 
         if (step > 0)
         {
-            EnsurePageHeader(form, pageBody, step);
+            EnsurePageHeader(pageBody, step);
             var header = pageBody.Controls.Cast<Control>().FirstOrDefault(c => Equals(c.Tag, "ReferencePageHeader"));
             if (header != null) LayoutPageBody(pageBody, header);
         }
@@ -132,7 +131,7 @@ internal static class UiPolish
     {
         var shell = Field<TableLayoutPanel>(form, "shellRoot");
         var sidebar = Field<FlowLayoutPanel>(form, "sidebar");
-        if (shell == null || sidebar == null) return;
+        if (shell == null || sidebar == null || shell.ColumnStyles.Count < 2) return;
         shell.ColumnStyles[0].Width = Math.Clamp((int)Math.Round(form.ClientSize.Width * 0.19), 260, 300);
         int inner = Math.Max(220, (int)shell.ColumnStyles[0].Width - sidebar.Padding.Horizontal);
         foreach (Control c in sidebar.Controls)
@@ -150,7 +149,7 @@ internal static class UiPolish
         }
     }
 
-    private static void EnsurePageHeader(MainForm form, Panel pageBody, int step)
+    private static void EnsurePageHeader(Panel pageBody, int step)
     {
         const string marker = "ReferencePageHeader";
         foreach (Control c in pageBody.Controls)
@@ -204,36 +203,16 @@ internal static class UiPolish
         }
         catch { }
         header.Controls.Add(logo);
-
-        header.Controls.Add(new Label
-        {
-            Text = pageTitle,
-            Font = new Font("Segoe UI Semibold", 25F),
-            ForeColor = Text,
-            Dock = DockStyle.Top,
-            Height = 50,
-            AutoEllipsis = true
-        });
-        header.Controls.Add(new Label
-        {
-            Text = subtitle,
-            Font = new Font("Segoe UI", 11F),
-            ForeColor = Muted,
-            Dock = DockStyle.Top,
-            Height = 34,
-            AutoEllipsis = true
-        });
+        header.Controls.Add(new Label { Text = pageTitle, Font = new Font("Segoe UI Semibold", 25F), ForeColor = Text, Dock = DockStyle.Top, Height = 50, AutoEllipsis = true });
+        header.Controls.Add(new Label { Text = subtitle, Font = new Font("Segoe UI", 11F), ForeColor = Muted, Dock = DockStyle.Top, Height = 34, AutoEllipsis = true });
         header.Controls.Add(new Label
         {
             Text = step == 3 ? @"Download location: D:\Suvidha Pos\Software" :
                    step == 4 ? @"Installation location: D:\Suvidha Pos\Software" :
                    step == 5 ? "SQL Server is installed and ready to use." :
                    "Suvidha POS Installer",
-            Font = new Font("Segoe UI Semibold", 9.5F),
-            ForeColor = Green,
-            Dock = DockStyle.Fill,
-            AutoEllipsis = true,
-            TextAlign = ContentAlignment.MiddleLeft
+            Font = new Font("Segoe UI Semibold", 9.5F), ForeColor = Green,
+            Dock = DockStyle.Fill, AutoEllipsis = true, TextAlign = ContentAlignment.MiddleLeft
         });
 
         pageBody.Controls.Add(header);
@@ -271,11 +250,7 @@ internal static class UiPolish
     {
         if (root is Panel panel && panel.BorderStyle == BorderStyle.FixedSingle)
             panel.BackColor = CardBg;
-        if (root is Label label)
-        {
-            if (label.Font.Size < 8.5F) label.Font = new Font("Segoe UI", 9F);
-        }
-        else if (root is TextBox box)
+        if (root is TextBox box)
         {
             box.BackColor = Color.FromArgb(8, 22, 40);
             box.ForeColor = Text;
