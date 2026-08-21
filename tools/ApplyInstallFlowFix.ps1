@@ -21,7 +21,6 @@ Replace-Regex '"Setup & Backup"' '"Setup Database"' 'step 6 title'
 Replace-Regex '"Database setup & backup"' '"Database setup"' 'step 6 subtitle'
 Replace-Regex '\+91 70042 52545' '+91 827171 8844' 'support phone'
 
-# Welcome -> Terms navigation. This is optional and idempotent.
 if ($text -notmatch '(?s)if \(step == 0\)\s*\{\s*ShowStep\(1\);\s*return;\s*\}') {
     $navPattern = '(?m)^\s*if \(step == 6\) \{ Close\(\); return; \}\s*\r?\n\s*if \(step == 1\)'
     if ([regex]::IsMatch($text, $navPattern)) {
@@ -35,11 +34,11 @@ if ($text -notmatch '(?s)if \(step == 0\)\s*\{\s*ShowStep\(1\);\s*return;\s*\}')
 '@
         $text = [regex]::Replace($text, $navPattern, $replacement.TrimEnd("`r", "`n"), 1)
         Write-Host 'Applied: Welcome -> Terms navigation'
+    } else {
+        Write-Host 'Navigation anchor not found; leaving existing navigation unchanged.'
     }
 }
 
-# Important: the replacement below is valid C# source. The single-quoted PowerShell
-# here-string preserves normal C# quotes and does not inject literal backslashes before them.
 $runnerPattern = '(?s)    private static async Task RunInstallerAsync\(string path, ComponentKind kind\)\s*\{.*?\r?\n    \}\r?\n\r?\n    private async Task RestoreOnlyAsync\(\)'
 $runnerReplacement = @'
     private static async Task RunInstallerAsync(string path, ComponentKind kind)
@@ -74,7 +73,6 @@ $runnerReplacement = @'
                 Verb = "runas",
                 WorkingDirectory = Path.GetDirectoryName(path)!
             };
-
             foreach (var arg in new[]
             {
                 "/Q",
