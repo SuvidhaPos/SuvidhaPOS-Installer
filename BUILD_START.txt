@@ -20,3 +20,5 @@ Local Windows build:
   .\build.ps1
 - Final installer:
   .\release\SuvidhaPOS-Installer-Setup.exe
+
+Latest validation trigger: 2026-08-21T20:40+05:30. The current main branch no longer contains Installer/FreshUi.cs; this marker intentionally triggers a fresh Windows build from the current main tree.
