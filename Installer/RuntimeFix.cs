@@ -27,18 +27,19 @@ internal static class RuntimeFix
 
     public static void Apply(MainForm form)
     {
-        // MainForm creates the controls itself. Stop a second WinForms DPI pass from
-        // changing fixed-height cards after the first layout has already been calculated.
         form.AutoScaleMode = AutoScaleMode.None;
         form.MinimumSize = new Size(1024, 768);
         if (form.ClientSize.Width < 1024 || form.ClientSize.Height < 768)
             form.ClientSize = new Size(1366, 768);
+
+        NormalizeSupportNumber(form);
 
         var content = ContentField.GetValue(form) as Panel;
         if (content != null)
         {
             content.ControlAdded += (_, _) =>
             {
+                NormalizeSupportNumber(form);
                 InvokeResponsiveShell(form);
                 StartVcPrefetchIfNeeded(form);
             };
@@ -46,6 +47,7 @@ internal static class RuntimeFix
 
         form.Shown += (_, _) =>
         {
+            NormalizeSupportNumber(form);
             InvokeResponsiveShell(form);
             StartVcPrefetchIfNeeded(form);
         };
@@ -59,6 +61,29 @@ internal static class RuntimeFix
             typeof(MainForm).GetMethod("ApplyResponsiveShell", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(form, null);
         }
         catch { }
+    }
+
+    private static void NormalizeSupportNumber(Control root)
+    {
+        foreach (Control c in GetControls(root))
+        {
+            if (c is Label label && label.Text.Contains("+91", StringComparison.OrdinalIgnoreCase))
+            {
+                label.Text = "+91 827171 8844";
+                label.ForeColor = Color.FromArgb(0, 166, 255);
+                label.AutoEllipsis = true;
+            }
+        }
+    }
+
+    private static IEnumerable<Control> GetControls(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            yield return child;
+            foreach (var nested in GetControls(child))
+                yield return nested;
+        }
     }
 
     private static void StartVcPrefetchIfNeeded(MainForm form)
