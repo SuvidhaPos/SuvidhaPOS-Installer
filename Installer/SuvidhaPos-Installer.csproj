@@ -33,8 +33,4 @@
     <None Include="..\Assets\SuvidhaPOS.ico" Link="Assets\SuvidhaPOS.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <Target Name="ApplyInstallerUiFix" BeforeTargets="BeforeBuild">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\UI_DPI_NAV_FIX.ps1&quot;" />
-  </Target>
-
 </Project>
