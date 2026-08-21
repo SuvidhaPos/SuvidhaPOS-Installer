@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - ui/reference-design-2026-08-21
+      - main
 
 permissions:
   contents: write
