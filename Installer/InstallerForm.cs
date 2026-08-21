@@ -43,15 +43,7 @@ public sealed class InstallerForm : Form
 
     private void BuildShell()
     {
-        var root = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 2,
-            RowCount = 2,
-            BackColor = Color.FromArgb(2, 10, 19),
-            Margin = Padding.Empty,
-            Padding = Padding.Empty
-        };
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, BackColor = Color.FromArgb(2, 10, 19), Margin = Padding.Empty, Padding = Padding.Empty };
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 280));
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
@@ -78,17 +70,10 @@ public sealed class InstallerForm : Form
             var b = new Button
             {
                 Text = $"{target}   {names[i]}\r\n{new string(' ', 5)}{subs[i]}",
-                Tag = target,
-                Width = 245,
-                Height = 66,
-                TextAlign = ContentAlignment.MiddleLeft,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.WhiteSmoke,
-                BackColor = Color.FromArgb(5, 24, 42),
-                FlatStyle = FlatStyle.Flat,
-                Margin = new Padding(0, 0, 0, 7),
-                Cursor = Cursors.Hand,
-                UseVisualStyleBackColor = false
+                Tag = target, Width = 245, Height = 66, TextAlign = ContentAlignment.MiddleLeft,
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold), ForeColor = Color.WhiteSmoke,
+                BackColor = Color.FromArgb(5, 24, 42), FlatStyle = FlatStyle.Flat,
+                Margin = new Padding(0, 0, 0, 7), Cursor = Cursors.Hand, UseVisualStyleBackColor = false
             };
             b.FlatAppearance.BorderColor = Color.FromArgb(12, 68, 112);
             b.Click += (_, _) => { if (!engine.Busy && target <= currentStep) ShowStep(target); };
@@ -123,10 +108,9 @@ public sealed class InstallerForm : Form
         var database = new DatabaseStep();
         var finish = new FinishStep();
 
-        database.TestConnectionRequested += async (_, _) => { await engine.TestConnectionAsync(); RefreshCurrentStep(); };
+        database.TestConnectionRequested += async (_, _) => { ReadDatabaseInputs(database); await engine.TestConnectionAsync(); RefreshCurrentStep(); };
         database.RestoreRequested += async (_, _) => { ReadDatabaseInputs(database); await engine.RestoreAsync(); RefreshCurrentStep(); };
         finish.LaunchRequested += (_, _) => engine.LaunchPos();
-
         steps.AddRange(new InstallerStepControl[] { welcome, terms, components, download, install, database, finish });
     }
 
@@ -136,26 +120,44 @@ public sealed class InstallerForm : Form
         switch (currentStep)
         {
             case 1:
-                ShowStep(2); break;
+                ShowStep(2);
+                break;
             case 2:
                 var terms = (TermsStep)steps[1];
                 if (!terms.AcceptTerms.Checked) { MessageBox.Show(this, "Please accept the Terms & Conditions first.", "Suvidha POS Installer", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-                ShowStep(3); break;
+                ShowStep(3);
+                break;
             case 3:
                 if (!engine.State.Components.Any(x => x.Selected)) { MessageBox.Show(this, "Select at least one component.", "Components", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-                ShowStep(4); await engine.DownloadAllAsync(); RefreshCurrentStep(); break;
+                ShowStep(4);
+                await engine.DownloadAllAsync();
+                RefreshCurrentStep();
+                break;
             case 4:
                 if (!engine.State.Components.Where(x => x.Selected).All(x => x.Status is "Downloaded" or "Ready" or "Installed")) { MessageBox.Show(this, "Please wait until all selected downloads are ready.", "Download", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-                ShowStep(5); await engine.InstallAllAsync(); RefreshCurrentStep(); break;
+                ShowStep(5);
+                await engine.InstallAllAsync();
+                RefreshCurrentStep();
+                break;
             case 5:
-                var db = (DatabaseStep)steps[5]; ReadDatabaseInputs(db);
-                if (!string.IsNullOrWhiteSpace(engine.State.BackupPath) && db.Restore.Checked) { await engine.RestoreAsync(); RefreshCurrentStep(); if (!engine.State.Database.RestoreStatus.Contains("success", StringComparison.OrdinalIgnoreCase)) return; }
-                if (!engine.SaveConfiguration()) { RefreshCurrentStep(); MessageBox.Show(this, engine.State.Error ?? "Could not save database configuration.", "Database Setup", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-                ShowStep(7); break;
+                if (!engine.State.Components.Where(x => x.Selected).All(x => x.Status is "Installed" or "Ready")) { MessageBox.Show(this, engine.State.Error ?? "Selected components have not finished installing.", "Install", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+                ShowStep(6);
+                break;
             case 6:
-                ShowStep(7); break;
+                var db = (DatabaseStep)steps[5];
+                ReadDatabaseInputs(db);
+                if (db.Restore.Checked && !string.IsNullOrWhiteSpace(engine.State.BackupPath))
+                {
+                    await engine.RestoreAsync();
+                    RefreshCurrentStep();
+                    if (!engine.State.Database.RestoreStatus.Contains("success", StringComparison.OrdinalIgnoreCase)) return;
+                }
+                if (!engine.SaveConfiguration()) { RefreshCurrentStep(); MessageBox.Show(this, engine.State.Error ?? "Could not save database configuration.", "Database Setup", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+                ShowStep(7);
+                break;
             case 7:
-                Close(); break;
+                Close();
+                break;
         }
     }
 
@@ -176,7 +178,7 @@ public sealed class InstallerForm : Form
         currentStep = Math.Clamp(number, 1, 7);
         engine.SetStep(currentStep);
         content.SuspendLayout();
-        foreach (Control c in content.Controls.OfType<Control>().ToList()) c.Dispose();
+        content.Controls.Clear();
         var step = steps[currentStep - 1];
         content.Controls.Add(step);
         step.Dock = DockStyle.Fill;
@@ -218,7 +220,7 @@ public sealed class InstallerForm : Form
     private void BeginInvokeIfRequired(Action action)
     {
         if (IsDisposed) return;
-        if (InvokeRequired) BeginInvoke(action);
+        if (IsHandleCreated && InvokeRequired) BeginInvoke(action);
         else action();
     }
 
