@@ -27,6 +27,9 @@ internal static class RuntimeFix
 
     public static void Apply(MainForm form)
     {
+        // MainForm creates the controls itself. Stop a second WinForms DPI pass from
+        // changing fixed-height cards after the first layout has already been calculated.
+        form.AutoScaleMode = AutoScaleMode.None;
         form.MinimumSize = new Size(1024, 768);
         if (form.ClientSize.Width < 1024 || form.ClientSize.Height < 768)
             form.ClientSize = new Size(1366, 768);
