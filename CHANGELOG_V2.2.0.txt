@@ -1,0 +1,24 @@
+Suvidha POS Installer 2.2.0
+============================
+
+UI:
+- Rebuilt the wizard layout around Dock/Anchor/TableLayoutPanel instead of fixed-position page blocks.
+- Narrow windows collapse the left navigation to a compact numbered rail.
+- Footer progress/buttons are table-based and resize with the window.
+- Welcome feature cards are responsive and no longer overlap the hero title.
+- Terms, Components, Download, Install, Setup & Backup and Finish pages avoid fixed oversized controls.
+- DPI scaling changed from None to Dpi.
+- Double-buffered custom cards remain in place to reduce repaint artifacts/flicker.
+
+Software directory:
+- Exact directory: D:\Suvidha Pos\Software
+- Downloads are written directly into that directory.
+- Existing downloads are reused from that directory.
+- Local MSI/VC++/backup checks use TopDirectoryOnly for that directory.
+- No installer-created component subfolders are used.
+
+Build:
+- .NET 8 win-x64 self-contained publish retained.
+- PublishSingleFile remains disabled.
+- Inno Setup packages the full publish directory.
+- GitHub Actions performs the authoritative Windows build.

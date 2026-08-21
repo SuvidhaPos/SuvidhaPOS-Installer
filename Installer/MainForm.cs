@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Drawing.Drawing2D;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -41,8 +42,7 @@ public sealed class MainForm : Form
     private const string ResumeTaskName = "SuvidhaPOS Installer Resume";
     private static readonly string DataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "SuvidhaPOS", "Installer");
     private static readonly string ResumeFile = Path.Combine(DataDir, "resume.json");
-    private static readonly string DownloadDir = Path.Combine(DataDir, "Downloads");
-    private const string SoftwareFolder = @"D:\Suvidha Pos\Software";
+        private const string SoftwareFolder = @"D:\Suvidha Pos\Software";
     private const string SqlDriveId = "1y5d9D1tkOn81dN6I7aPtkd4DRQJCtmhT";
     private const string SsMsDriveId = "1QFaDEaOb-qGhqLIfqpXrHYhDeCp19gPT";
     private const string CrystalDriveId = "1u3YBZqVdx5tIOPh8RU19FrOjWC-Np05v";
@@ -107,8 +107,8 @@ public sealed class MainForm : Form
 
         Text = "Suvidha POS Installer";
         StartPosition = FormStartPosition.CenterScreen;
-        MinimumSize = new Size(800, 600);
-        Size = new Size(1500, 920);
+        MinimumSize = new Size(820, 600);
+        Size = new Size(1280, 800);
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Bg;
         ForeColor = TextColor;
@@ -331,22 +331,51 @@ public sealed class MainForm : Form
     {
         StartPage("Welcome", "Welcome to Installer", "Next  →");
 
-        var hero = new RoundedCard
+        var stack = new TableLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 300,
-            Margin = new Padding(0, 0, 0, 12),
+            ColumnCount = 1,
+            RowCount = 3,
+            AutoSize = false,
+            BackColor = Color.Transparent,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
+        };
+        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 246));
+        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 96));
+        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 190));
+        stack.Size = new Size(Math.Max(1, pageBody.ClientSize.Width - 4), 532);
+        pageBody.Controls.Add(stack);
+
+        var hero = new RoundedCard
+        {
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 0, 0, 10),
             Padding = new Padding(18)
         };
-        pageBody.Controls.Add(hero);
-        hero.BringToFront();
+        stack.Controls.Add(hero, 0, 0);
+
+        var heroGrid = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 2,
+            BackColor = Color.Transparent,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
+        };
+        heroGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 190));
+        heroGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        heroGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 68));
+        heroGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 32));
+        hero.Controls.Add(heroGrid);
 
         var logo = new PictureBox
         {
-            Size = new Size(185, 105),
-            Location = new Point(22, 24),
+            Dock = DockStyle.Fill,
             SizeMode = PictureBoxSizeMode.Zoom,
-            BackColor = Color.Transparent
+            BackColor = Color.Transparent,
+            Margin = new Padding(4, 8, 14, 8)
         };
         try
         {
@@ -354,194 +383,159 @@ public sealed class MainForm : Form
             if (File.Exists(p)) logo.Image = Image.FromFile(p);
         }
         catch { }
-        hero.Controls.Add(logo);
+        heroGrid.Controls.Add(logo, 0, 0);
+        heroGrid.SetRowSpan(logo, 2);
+
+        var titlePanel = new Panel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 10, 0, 0)
+        };
+        heroGrid.Controls.Add(titlePanel, 1, 0);
 
         var title1 = new Label
         {
-            Text = "Welcome to",
+            Text = "Welcome to Suvidha POS",
             Font = new Font("Segoe UI Semibold", 25F),
             ForeColor = TextColor,
-            AutoSize = true,
-            Location = new Point(225, 28)
+            Dock = DockStyle.Top,
+            Height = 42,
+            AutoEllipsis = true
         };
-        hero.Controls.Add(title1);
-
-        var title2 = new Label
-        {
-            Text = "Suvidha POS Installer",
-            Font = new Font("Segoe UI Semibold", 30F),
-            ForeColor = Color.FromArgb(194, 124, 255),
-            AutoSize = true,
-            MaximumSize = new Size(900, 50),
-            Location = new Point(225, 66)
-        };
-        hero.Controls.Add(title2);
+        titlePanel.Controls.Add(title1);
 
         var desc = new Label
         {
-            Text = "Install Suvidha POS and its required components safely and step-by-step.",
-            Font = new Font("Segoe UI", 11.5F),
-            ForeColor = TextColor,
-            AutoSize = true,
-            MaximumSize = new Size(900, 42),
-            Location = new Point(228, 116)
-        };
-        hero.Controls.Add(desc);
-
-        var features = new[]
-        {
-            AddFeature(hero, 22, 166, "✓", "Secure", "Verified files", Cyan),
-            AddFeature(hero, 214, 166, "⚡", "Automatic", "Guided setup", Purple),
-            AddFeature(hero, 406, 166, "●", "Easy", "One click", Green),
-            AddFeature(hero, 598, 166, "⚙", "Smart", "Detect & configure", Orange)
-        };
-
-        void LayoutHero()
-        {
-            var w = hero.ClientSize.Width;
-            var narrow = w < 900;
-
-            if (!narrow)
-            {
-                hero.Height = 300;
-                logo.Bounds = new Rectangle(22, 24, 185, 105);
-                title1.Location = new Point(225, 28);
-                title1.Font = new Font("Segoe UI Semibold", 25F);
-                title2.Location = new Point(225, 66);
-                title2.Font = new Font("Segoe UI Semibold", 30F);
-                desc.Location = new Point(228, 116);
-                desc.Font = new Font("Segoe UI", 11.5F);
-
-                var gap = 10;
-                var left = 22;
-                var cardW = Math.Max(150, (w - left * 2 - gap * 3) / 4);
-                for (int i = 0; i < features.Length; i++)
-                    features[i].Bounds = new Rectangle(left + i * (cardW + gap), 166, cardW, 82);
-            }
-            else
-            {
-                hero.Height = 410;
-                var pad = 18;
-                logo.Bounds = new Rectangle(pad, 18, 150, 88);
-                title1.Location = new Point(180, 24);
-                title1.Font = new Font("Segoe UI Semibold", 20F);
-                title2.Location = new Point(180, 57);
-                title2.Font = new Font("Segoe UI Semibold", 23F);
-                desc.Location = new Point(pad, 112);
-                desc.Font = new Font("Segoe UI", 10F);
-
-                var gap = 8;
-                var innerW = Math.Max(300, w - pad * 2);
-                var cardW = Math.Max(130, (innerW - gap) / 2);
-                for (int i = 0; i < features.Length; i++)
-                {
-                    var row = i / 2;
-                    var col = i % 2;
-                    features[i].Bounds = new Rectangle(
-                        pad + col * (cardW + gap),
-                        160 + row * 90,
-                        cardW,
-                        82);
-                }
-            }
-        }
-
-        hero.Resize += (_, _) => LayoutHero();
-        LayoutHero();
-
-        var source = new RoundedCard
-        {
+            Text = "Install the required components safely and step-by-step.",
+            Font = new Font("Segoe UI", 11F),
+            ForeColor = Muted,
             Dock = DockStyle.Top,
-            Height = 104,
-            Margin = new Padding(0, 0, 0, 12)
+            Height = 42,
+            AutoEllipsis = true
         };
-        pageBody.Controls.Add(source);
-        source.BringToFront();
+        titlePanel.Controls.Add(desc);
 
-        AddSectionTitle(source, "Source Folder", "Software files will be used from this location", 14);
-
-        var folder = new Label
+        var sourceHint = new Label
         {
-            Text = SoftwareFolder,
-            Font = new Font("Segoe UI Semibold", 11F),
+            Text = $"Files are kept in: {SoftwareFolder}",
+            Font = new Font("Segoe UI Semibold", 9.5F),
             ForeColor = Green,
-            AutoSize = true,
-            Location = new Point(20, 58)
+            Dock = DockStyle.Fill,
+            AutoEllipsis = true,
+            TextAlign = ContentAlignment.MiddleLeft
         };
-        source.Controls.Add(folder);
+        heroGrid.Controls.Add(sourceHint, 1, 1);
 
-        var open = MakeButton("📁  Open", 125, Color.FromArgb(7, 54, 108));
-        open.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        source.Controls.Add(open);
-
-        void LayoutSource()
+        var featureGrid = new TableLayoutPanel
         {
-            open.Location = new Point(
-                Math.Max(20, source.ClientSize.Width - open.Width - 18),
-                30);
+            Dock = DockStyle.Fill,
+            ColumnCount = 4,
+            RowCount = 1,
+            BackColor = Color.Transparent,
+            Margin = new Padding(0, 0, 0, 10),
+            Padding = Padding.Empty
+        };
+        for (int i = 0; i < 4; i++)
+            featureGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
+        stack.Controls.Add(featureGrid, 0, 1);
 
-            folder.MaximumSize = new Size(
-                Math.Max(180, open.Left - folder.Left - 14),
-                28);
-        }
+        string[] icons = { "✓", "ϟ", "●", "⚙" };
+        string[] titles = { "Safe & Secure", "Automatic", "Fast & Easy", "Smart Setup" };
+        string[] subs = { "Verified files", "Guided process", "One-click flow", "Detect & configure" };
+        Color[] colors = { Cyan, Purple, Green, Orange };
 
-        source.Resize += (_, _) => LayoutSource();
-        LayoutSource();
-        open.Click += (_, _) =>
+        for (int i = 0; i < 4; i++)
         {
-            try
+            var feature = new FeatureCard
             {
-                Directory.CreateDirectory(SoftwareFolder);
-                Process.Start("explorer.exe", SoftwareFolder);
-            }
-            catch { }
-        };
+                Dock = DockStyle.Fill,
+                Accent = colors[i],
+                Margin = new Padding(i == 0 ? 0 : 4, 0, i == 3 ? 0 : 4, 0)
+            };
+            featureGrid.Controls.Add(feature, i, 0);
+
+            feature.Controls.Add(new Label
+            {
+                Text = icons[i],
+                Font = new Font("Segoe UI Symbol", 18F, FontStyle.Bold),
+                ForeColor = colors[i],
+                Dock = DockStyle.Left,
+                Width = 42,
+                TextAlign = ContentAlignment.MiddleCenter
+            });
+            feature.Controls.Add(new Label
+            {
+                Text = titles[i] + Environment.NewLine + subs[i],
+                Font = new Font("Segoe UI Semibold", 8.5F),
+                ForeColor = TextColor,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoEllipsis = true
+            });
+        }
 
         var bottom = new TableLayoutPanel
         {
-            Dock = DockStyle.Top,
-            Height = 245,
+            Dock = DockStyle.Fill,
             ColumnCount = 2,
             RowCount = 1,
             BackColor = Color.Transparent,
-            Margin = new Padding(0)
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
         };
         bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        pageBody.Controls.Add(bottom);
-        bottom.BringToFront();
+        stack.Controls.Add(bottom, 0, 2);
 
-        bottom.Controls.Add(
-            CreateChecklistCard(
-                "What will be installed?",
-                new[]
-                {
-                    "SQL Server 2019",
-                    "SQL Server Management Studio",
-                    "Crystal Reports Runtime",
-                    "Suvidha POS Application",
-                    "Database Backup & Restore"
-                }), 0, 0);
+        var installed = CreateChecklistCard("What will be installed?", new[]
+        {
+            "SQL Server 2019",
+            "SQL Server Management Studio",
+            "Crystal Reports Runtime",
+            "Suvidha POS Application",
+            "Database Backup Restore"
+        });
+        installed.Dock = DockStyle.Fill;
+        installed.Margin = new Padding(0, 0, 5, 0);
+        bottom.Controls.Add(installed, 0, 0);
 
-        bottom.Controls.Add(
-            CreateChecklistCard(
-                "System Requirements",
-                new[]
-                {
-                    "Windows 10 / 11 (64-bit)",
-                    "4 GB RAM or more",
-                    "10 GB free disk space",
-                    "Internet connection for downloads",
-                    "Administrator privileges"
-                }), 1, 0);
+        var requirements = CreateChecklistCard("System Requirements", new[]
+        {
+            "Windows 10 / 11 (64-bit)",
+            "4 GB RAM or more",
+            "10 GB free disk space",
+            "Internet connection for downloads",
+            "Administrator privileges"
+        });
+        requirements.Dock = DockStyle.Fill;
+        requirements.Margin = new Padding(5, 0, 0, 0);
+        bottom.Controls.Add(requirements, 1, 0);
+
+        pageBody.Resize += (_, _) =>
+        {
+            stack.Width = Math.Max(1, pageBody.ClientSize.Width - 4);
+            if (stack.Width < 720)
+            {
+                heroGrid.ColumnStyles[0].Width = 145;
+                title1.Font = new Font("Segoe UI Semibold", 20F);
+                desc.Font = new Font("Segoe UI", 9.5F);
+            }
+            else
+            {
+                heroGrid.ColumnStyles[0].Width = 190;
+                title1.Font = new Font("Segoe UI Semibold", 25F);
+                desc.Font = new Font("Segoe UI", 11F);
+            }
+        };
     }
 
     private FeatureCard AddFeature(Control parent, int x, int y, string icon, string title, string sub, Color color)
     {
         var c = new FeatureCard { Size = new Size(175, 84), Location = new Point(x, y), Accent = color }; parent.Controls.Add(c);
         c.Controls.Add(new Label { Text = icon, Font = new Font("Segoe UI Symbol", 25F), ForeColor = color, AutoSize = true, Location = new Point(12, 12) });
-        c.Controls.Add(new Label { Text = title, Font = new Font("Segoe UI Semibold", 10F), ForeColor = TextColor, AutoSize = true, MaximumSize = new Size(105, 22), Location = new Point(54, 14) });
-        c.Controls.Add(new Label { Text = sub, Font = new Font("Segoe UI", 8.2F), ForeColor = Green, AutoSize = true, MaximumSize = new Size(110, 20), Location = new Point(54, 43) });
+        c.Controls.Add(new Label { Text = title, Font = new Font("Segoe UI Semibold", 10F), ForeColor = TextColor, AutoSize = true, Location = new Point(54, 15) });
+        c.Controls.Add(new Label { Text = sub, Font = new Font("Segoe UI", 8.5F), ForeColor = Color.FromArgb(62, 255, 88), AutoSize = true, Location = new Point(54, 43) });
         return c;
     }
 
@@ -561,10 +555,54 @@ public sealed class MainForm : Form
     private void BuildTerms()
     {
         StartPage("Terms & Conditions", "Please read the following terms and conditions carefully.", "Next  →");
-        var box = new RoundedCard { Dock = DockStyle.Fill, Padding = new Padding(20, 18, 20, 18) }; pageBody.Controls.Add(box); box.BringToFront();
-        var title = new Label { Text = "SUVIDHA POS INSTALLER – TERMS AND CONDITIONS", Font = new Font("Segoe UI Semibold", 11F), ForeColor = TextColor, AutoSize = true, Location = new Point(24, 18) }; box.Controls.Add(title);
-        var text = new RichTextBox { Location = new Point(20, 52), Size = new Size(900, 500), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, ReadOnly = true, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(3, 14, 28), ForeColor = TextColor, Font = new Font("Segoe UI", 10F), Text = TermsText() }; box.Controls.Add(text);
-        terms = new CheckBox { Text = "I accept the terms and conditions", AutoSize = true, ForeColor = TextColor, Font = new Font("Segoe UI Semibold", 10F), Location = new Point(24, 570), Anchor = AnchorStyles.Bottom | AnchorStyles.Left }; box.Controls.Add(terms);
+
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 3,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 2, 0, 2)
+        };
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
+        pageBody.Controls.Add(layout);
+
+        layout.Controls.Add(new Label
+        {
+            Text = "SUVIDHA POS INSTALLER – TERMS AND CONDITIONS",
+            Font = new Font("Segoe UI Semibold", 10.5F),
+            ForeColor = TextColor,
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleLeft,
+            AutoEllipsis = true
+        }, 0, 0);
+
+        var text = new RichTextBox
+        {
+            Dock = DockStyle.Fill,
+            ReadOnly = true,
+            BorderStyle = BorderStyle.FixedSingle,
+            BackColor = Color.FromArgb(3, 14, 28),
+            ForeColor = TextColor,
+            Font = new Font("Segoe UI", 9.5F),
+            Text = TermsText(),
+            DetectUrls = true
+        };
+        layout.Controls.Add(text, 0, 1);
+
+        terms = new CheckBox
+        {
+            Text = "I accept the terms and conditions",
+            AutoSize = true,
+            ForeColor = TextColor,
+            Font = new Font("Segoe UI Semibold", 9.5F),
+            Anchor = AnchorStyles.Left,
+            Margin = new Padding(4, 0, 0, 0)
+        };
+        layout.Controls.Add(terms, 0, 2);
+
         if (state.Completed.Contains("terms")) terms.Checked = true;
     }
 
@@ -580,118 +618,548 @@ public sealed class MainForm : Form
 
     private void BuildComponents()
     {
-        StartPage("Components", "Select components to download and install.", "Next  →");
-        var host = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, Padding = new Padding(0, 4, 0, 0), BackColor = Color.Transparent }; pageBody.Controls.Add(host); host.BringToFront();
+        StartPage("Components", "Select the components you want to install.", "Next  →");
+
+        var grid = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            ColumnCount = 1,
+            AutoSize = true,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 2, 0, 2)
+        };
+        pageBody.Controls.Add(grid);
+
         foreach (var c in components)
         {
-            var card = new ComponentSelectCard(c) { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 78, Margin = new Padding(0, 0, 0, 9) };
-            c.Check = card.Check; host.Controls.Add(card);
+            var card = new ComponentSelectCard(c)
+            {
+                Dock = DockStyle.Top,
+                Height = 74,
+                Margin = new Padding(0, 0, 0, 8)
+            };
+            c.Check = card.Check;
+            grid.Controls.Add(card);
         }
-        var note = new Label { Text = "SQL Server and SSMS use their normal Microsoft setup screens, so you can select Default Instance and other setup options during installation.", ForeColor = Muted, AutoSize = true, MaximumSize = new Size(1000, 40), Margin = new Padding(6, 8, 0, 0) }; host.Controls.Add(note);
+
+        grid.Controls.Add(new Label
+        {
+            Text = "All downloaded files are stored directly in D:\\Suvidha Pos\\Software. No component subfolders are created.",
+            ForeColor = Muted,
+            Dock = DockStyle.Top,
+            Height = 42,
+            Padding = new Padding(4, 8, 4, 0),
+            AutoEllipsis = true
+        });
     }
 
     private void BuildDownload()
     {
-        StartPage("Download", "Download installation files.", "Next  →");
-        var host = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, BackColor = Color.Transparent, Padding = new Padding(0, 4, 0, 0) }; pageBody.Controls.Add(host); host.BringToFront();
-        downloadSummary = new Label { Text = "Ready to download selected files...", Font = new Font("Segoe UI Semibold", 11F), ForeColor = TextColor, AutoSize = true, Margin = new Padding(4, 5, 0, 12) }; host.Controls.Add(downloadSummary);
-        foreach (var c in components.Where(x => x.Selected)) host.Controls.Add(CreateProgressCard(c, true));
-        var total = new RoundedCard { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 94, Margin = new Padding(0, 8, 0, 0) }; host.Controls.Add(total);
-        total.Controls.Add(new Label { Text = "Overall Download Progress", Font = new Font("Segoe UI Semibold", 10.5F), ForeColor = TextColor, AutoSize = true, Location = new Point(18, 12) });
-        downloadOverall = new ProgressBar { Location = new Point(18, 43), Size = new Size(total.Width - 36, 12), Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top, Style = ProgressBarStyle.Continuous }; total.Controls.Add(downloadOverall);
-        var local = FindLocalMsi(); if (local != null) files["Suvidha POS Application"] = local;
+        StartPage("Download", "Download installation files to the fixed software folder.", "Next  →");
+        Directory.CreateDirectory(SoftwareFolder);
+
+        var grid = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            ColumnCount = 1,
+            AutoSize = true,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 2, 0, 2)
+        };
+        pageBody.Controls.Add(grid);
+
+        downloadSummary = new Label
+        {
+            Text = $"Ready. Target folder: {SoftwareFolder}",
+            Font = new Font("Segoe UI Semibold", 10F),
+            ForeColor = TextColor,
+            Dock = DockStyle.Top,
+            Height = 34,
+            Padding = new Padding(4, 4, 4, 0),
+            AutoEllipsis = true
+        };
+        grid.Controls.Add(downloadSummary);
+
+        foreach (var c in components.Where(x => x.Selected))
+        {
+            var card = CreateProgressCard(c, true);
+            card.Dock = DockStyle.Top;
+            card.Height = 78;
+            card.Margin = new Padding(0, 0, 0, 8);
+            grid.Controls.Add(card);
+        }
+
+        var total = new RoundedCard
+        {
+            Dock = DockStyle.Top,
+            Height = 84,
+            Margin = new Padding(0, 4, 0, 0),
+            Padding = new Padding(16, 10, 16, 10)
+        };
+        grid.Controls.Add(total);
+        total.Controls.Add(new Label
+        {
+            Text = "Overall Download Progress",
+            Font = new Font("Segoe UI Semibold", 9.5F),
+            ForeColor = TextColor,
+            Dock = DockStyle.Top,
+            Height = 24
+        });
+        downloadOverall = new ProgressBar
+        {
+            Minimum = 0,
+            Maximum = 100,
+            Value = 0,
+            Style = ProgressBarStyle.Continuous,
+            Dock = DockStyle.Top,
+            Height = 12,
+            Margin = new Padding(0, 6, 0, 0)
+        };
+        total.Controls.Add(downloadOverall);
+
+        var local = FindLocalMsi();
+        if (local != null) files["Suvidha POS Application"] = local;
         if (FindLocalVcRedist() is { } vc) files["Microsoft Visual C++ Redistributable"] = vc;
         if (FindLocalBackup() is { } bak) state.BackupPath = bak;
-        if (state.Completed.Contains("downloads")) downloadSummary.Text = "Downloads already completed. Existing files will be reused.";
+        if (state.Completed.Contains("downloads"))
+            downloadSummary.Text = "Downloads already completed. Existing files in the target folder will be reused.";
     }
 
     private Control CreateProgressCard(ComponentItem c, bool download)
     {
-        var card = new RoundedCard { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 82, Margin = new Padding(0, 0, 0, 8) };
-        var icon = new Label { Text = c.Kind == ComponentKind.Msi ? "▣" : c.Kind == ComponentKind.Local ? "▰" : "▤", Font = new Font("Segoe UI Symbol", 19F), ForeColor = Blue, AutoSize = true, Location = new Point(16, 12) }; card.Controls.Add(icon);
-        card.Controls.Add(new Label { Text = c.Name, Font = new Font("Segoe UI Semibold", 10F), ForeColor = TextColor, AutoSize = true, Location = new Point(54, 10) });
-        var status = new Label { Text = c.Status, Font = new Font("Segoe UI", 8.5F), ForeColor = Muted, AutoSize = true, Location = new Point(54, 37) }; card.Controls.Add(status); c.StatusLabel = status;
-        var pb = new ProgressBar { Location = new Point(54, 57), Size = new Size(420, 8), Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top, Style = ProgressBarStyle.Continuous }; card.Controls.Add(pb); c.Progress = pb;
+        var card = new RoundedCard
+        {
+            Dock = DockStyle.Top,
+            Height = 78,
+            Padding = new Padding(14, 10, 14, 8),
+            Margin = new Padding(0)
+        };
+
+        card.Controls.Add(new Label
+        {
+            Text = c.Kind == ComponentKind.Msi ? "▣" : c.Kind == ComponentKind.Local ? "▰" : "▤",
+            Font = new Font("Segoe UI Symbol", 17F),
+            ForeColor = c.Kind == ComponentKind.Local ? Green : Blue,
+            Dock = DockStyle.Left,
+            Width = 38,
+            TextAlign = ContentAlignment.MiddleCenter
+        });
+
+        var statusPanel = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 3,
+            BackColor = Color.Transparent,
+            Margin = Padding.Empty,
+            Padding = new Padding(6, 0, 0, 0)
+        };
+        statusPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
+        statusPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));
+        statusPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        card.Controls.Add(statusPanel);
+
+        statusPanel.Controls.Add(new Label
+        {
+            Text = c.Name,
+            Font = new Font("Segoe UI Semibold", 9.5F),
+            ForeColor = TextColor,
+            Dock = DockStyle.Fill,
+            AutoEllipsis = true
+        }, 0, 0);
+
+        var status = new Label
+        {
+            Text = c.Status,
+            Font = new Font("Segoe UI", 8F),
+            ForeColor = Muted,
+            Dock = DockStyle.Fill,
+            AutoEllipsis = true
+        };
+        statusPanel.Controls.Add(status, 0, 1);
+        c.StatusLabel = status;
+
+        var pb = new ProgressBar
+        {
+            Minimum = 0,
+            Maximum = 100,
+            Value = 0,
+            Style = ProgressBarStyle.Continuous,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 2, 0, 0)
+        };
+        statusPanel.Controls.Add(pb, 0, 2);
+        c.Progress = pb;
+
         return card;
     }
 
     private void BuildInstall()
     {
-        StartPage("Install", "Install all selected components one-by-one.", "Install  →");
-        var host = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, BackColor = Color.Transparent, Padding = new Padding(0, 4, 0, 0) }; pageBody.Controls.Add(host); host.BringToFront();
-        installSummary = new Label { Text = "Click Install to begin.", Font = new Font("Segoe UI Semibold", 11F), ForeColor = TextColor, AutoSize = true, Margin = new Padding(4, 5, 0, 12) }; host.Controls.Add(installSummary);
-        foreach (var c in components.Where(x => x.Selected)) host.Controls.Add(CreateInstallCard(c));
-        var total = new RoundedCard { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 94, Margin = new Padding(0, 8, 0, 0) }; host.Controls.Add(total);
-        total.Controls.Add(new Label { Text = "Overall Installation Progress", Font = new Font("Segoe UI Semibold", 10.5F), ForeColor = TextColor, AutoSize = true, Location = new Point(18, 12) });
-        installOverall = new ProgressBar { Location = new Point(18, 43), Size = new Size(total.Width - 36, 12), Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top, Style = ProgressBarStyle.Continuous }; total.Controls.Add(installOverall);
-        if (state.Completed.Contains("installation")) installSummary.Text = "Installation was completed. Click Next to continue.";
+        StartPage("Install", "Install selected components one-by-one.", "Install  →");
+
+        var grid = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            ColumnCount = 1,
+            AutoSize = true,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 2, 0, 2)
+        };
+        pageBody.Controls.Add(grid);
+
+        installSummary = new Label
+        {
+            Text = "Click Install to begin.",
+            Font = new Font("Segoe UI Semibold", 10F),
+            ForeColor = TextColor,
+            Dock = DockStyle.Top,
+            Height = 34,
+            Padding = new Padding(4, 4, 4, 0),
+            AutoEllipsis = true
+        };
+        grid.Controls.Add(installSummary);
+
+        foreach (var c in components.Where(x => x.Selected))
+        {
+            var card = CreateInstallCard(c);
+            card.Dock = DockStyle.Top;
+            card.Height = 72;
+            card.Margin = new Padding(0, 0, 0, 8);
+            grid.Controls.Add(card);
+        }
+
+        var total = new RoundedCard
+        {
+            Dock = DockStyle.Top,
+            Height = 84,
+            Margin = new Padding(0, 4, 0, 0),
+            Padding = new Padding(16, 10, 16, 10)
+        };
+        grid.Controls.Add(total);
+        total.Controls.Add(new Label
+        {
+            Text = "Overall Installation Progress",
+            Font = new Font("Segoe UI Semibold", 9.5F),
+            ForeColor = TextColor,
+            Dock = DockStyle.Top,
+            Height = 24
+        });
+        installOverall = new ProgressBar
+        {
+            Minimum = 0,
+            Maximum = 100,
+            Value = 0,
+            Style = ProgressBarStyle.Continuous,
+            Dock = DockStyle.Top,
+            Height = 12,
+            Margin = new Padding(0, 6, 0, 0)
+        };
+        total.Controls.Add(installOverall);
+
+        if (state.Completed.Contains("installation"))
+            installSummary.Text = "Installation was completed. Click Next to continue.";
     }
 
     private Control CreateInstallCard(ComponentItem c)
     {
-        var card = new RoundedCard { Width = Math.Max(300, content.ClientSize.Width - 35), Height = 74, Margin = new Padding(0, 0, 0, 8) };
-        var icon = new Label { Text = "○", Font = new Font("Segoe UI", 18F), ForeColor = Muted, AutoSize = true, Location = new Point(18, 15) }; card.Controls.Add(icon);
-        card.Controls.Add(new Label { Text = c.Name, Font = new Font("Segoe UI Semibold", 10F), ForeColor = TextColor, AutoSize = true, Location = new Point(55, 10) });
-        var status = new Label { Text = c.Status, Font = new Font("Segoe UI", 8.5F), ForeColor = Muted, AutoSize = true, Location = new Point(55, 38) }; card.Controls.Add(status); c.StatusLabel = status;
-        c.Progress = new ProgressBar { Location = new Point(330, 20), Size = new Size(330, 9), Style = ProgressBarStyle.Continuous, Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right }; card.Controls.Add(c.Progress);
+        var card = new RoundedCard
+        {
+            Dock = DockStyle.Top,
+            Height = 72,
+            Padding = new Padding(14, 8, 14, 8),
+            Margin = new Padding(0)
+        };
+
+        card.Controls.Add(new Label
+        {
+            Text = "○",
+            Font = new Font("Segoe UI", 17F),
+            ForeColor = Muted,
+            Dock = DockStyle.Left,
+            Width = 38,
+            TextAlign = ContentAlignment.MiddleCenter
+        });
+
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 3,
+            BackColor = Color.Transparent,
+            Margin = Padding.Empty,
+            Padding = new Padding(6, 0, 0, 0)
+        };
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 21));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 19));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        card.Controls.Add(layout);
+
+        layout.Controls.Add(new Label
+        {
+            Text = c.Name,
+            Font = new Font("Segoe UI Semibold", 9.5F),
+            ForeColor = TextColor,
+            Dock = DockStyle.Fill,
+            AutoEllipsis = true
+        }, 0, 0);
+
+        var status = new Label
+        {
+            Text = c.Status,
+            Font = new Font("Segoe UI", 8F),
+            ForeColor = Muted,
+            Dock = DockStyle.Fill,
+            AutoEllipsis = true
+        };
+        layout.Controls.Add(status, 0, 1);
+        c.StatusLabel = status;
+
+        c.Progress = new ProgressBar
+        {
+            Minimum = 0,
+            Maximum = 100,
+            Value = 0,
+            Style = ProgressBarStyle.Continuous,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 2, 0, 0)
+        };
+        layout.Controls.Add(c.Progress, 0, 2);
         return card;
     }
 
     private void BuildSetupAndBackup()
     {
-        StartPage("Setup & Backup", "Database setup & backup restore.", "Save & Continue  →");
-        var grid = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3, BackColor = Color.Transparent, Padding = new Padding(0, 4, 0, 0) }; grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 58)); grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42)); grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 150)); grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 260)); grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); pageBody.Controls.Add(grid); grid.BringToFront();
-        var backup = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 8, 8) }; grid.Controls.Add(backup, 0, 0); AddSectionTitle(backup, "Backup File", "Select backup file to restore database", 18);
-        backupBox = new TextBox { Location = new Point(20, 73), Width = 440, Height = 30, Text = state.BackupPath ?? FindLocalBackup() ?? "" }; backup.Controls.Add(backupBox);
-        var browse = MakeButton("Browse", 92, Color.FromArgb(7, 54, 108)); browse.Location = new Point(470, 70); browse.Anchor = AnchorStyles.Top | AnchorStyles.Right; backup.Controls.Add(browse); browse.Click += (_, _) => BrowseBackup();
-        restoreBox = new CheckBox { Text = "Restore database after installation", AutoSize = true, ForeColor = TextColor, Checked = !string.IsNullOrWhiteSpace(backupBox.Text), Location = new Point(20, 113) }; backup.Controls.Add(restoreBox);
-        restoreStatus = new Label { Text = "", ForeColor = Muted, AutoSize = true, Location = new Point(20, 137) }; backup.Controls.Add(restoreStatus);
+        StartPage("Setup & Backup", "Database setup, restore and application configuration.", "Save & Continue  →");
 
-        var info = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(8, 0, 0, 8) }; grid.Controls.Add(info, 1, 0); AddSectionTitle(info, "Database Information", "Windows authentication", 18);
-        info.Controls.Add(new Label { Text = "Server Name", ForeColor = Muted, AutoSize = true, Location = new Point(20, 64) });
-        serverBox = new TextBox { Location = new Point(20, 88), Width = 250, Text = state.ServerName ?? "localhost" }; info.Controls.Add(serverBox);
-        info.Controls.Add(new Label { Text = "Database Name", ForeColor = Muted, AutoSize = true, Location = new Point(20, 122) });
-        databaseBox = new TextBox { Location = new Point(20, 146), Width = 250, Text = state.DatabaseName ?? "SuvidhaPOS" }; info.Controls.Add(databaseBox);
+        var grid = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            ColumnCount = 2,
+            RowCount = 3,
+            AutoSize = true,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 2, 0, 2)
+        };
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 150));
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 190));
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 120));
+        pageBody.Controls.Add(grid);
 
-        var restoreCard = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 8, 8) }; grid.Controls.Add(restoreCard, 0, 1); AddSectionTitle(restoreCard, "Database Restore", "The backup will be restored with replacement if the database already exists.", 18);
-        var restoreButton = MakeGradientButton("Restore Database", 190); restoreButton.Location = new Point(24, 70); restoreCard.Controls.Add(restoreButton); restoreButton.Click += async (_, _) => await RestoreOnlyAsync();
-        var testButton = MakeButton("Test Connection", 160, Color.FromArgb(7, 54, 108)); testButton.Location = new Point(230, 71); restoreCard.Controls.Add(testButton); testButton.Click += async (_, _) => await TestConnectionAsync();
-        restoreCard.Controls.Add(new Label { Text = "The SQL Server setup screens remain interactive. Use Default Instance if that is your required deployment option.", ForeColor = Muted, AutoSize = true, MaximumSize = new Size(560, 70), Location = new Point(24, 122) });
+        var backup = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 5, 8), Padding = new Padding(16) };
+        grid.Controls.Add(backup, 0, 0);
+        AddSectionTitle(backup, "Backup File", "Select a .bak/.backup file from the fixed software folder or browse.", 14);
 
-        var config = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(8, 0, 0, 8) }; grid.Controls.Add(config, 1, 1); AddSectionTitle(config, "Suvidha POS Configuration", "Updates SuvidhaPos.exe.config or RetailPos.exe.config", 18);
-        var findButton = MakeButton("Detect Application", 180, Color.FromArgb(7, 54, 108)); findButton.Location = new Point(20, 68); config.Controls.Add(findButton); findButton.Click += (_, _) => DetectConfig();
-        var saveButton = MakeGradientButton("Save SQL Config", 170); saveButton.Location = new Point(20, 116); config.Controls.Add(saveButton); saveButton.Click += (_, _) => SaveConfigFromStep();
-        configStatus = new Label { Text = "", ForeColor = Muted, AutoSize = true, MaximumSize = new Size(350, 80), Location = new Point(20, 170) }; config.Controls.Add(configStatus);
+        var backupLayout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, BackColor = Color.Transparent, Margin = new Padding(0, 12, 0, 0) };
+        backupLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        backupLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 94));
+        backupLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
+        backupLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
+        backup.Controls.Add(backupLayout);
 
-        var note = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 8, 0) }; grid.Controls.Add(note, 0, 2); AddSectionTitle(note, "Resume Protection", "Your progress is saved automatically.", 18);
-        note.Controls.Add(new Label { Text = "If Windows restarts or the PC is switched off, the installer will reopen at the same step after login. Completed files are reused.", ForeColor = TextColor, AutoSize = true, MaximumSize = new Size(620, 70), Location = new Point(24, 66) });
-        var finishNote = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(8, 0, 0, 0) }; grid.Controls.Add(finishNote, 1, 2); AddSectionTitle(finishNote, "Ready", "After configuration, click Save & Continue.", 18); finishNote.Controls.Add(new Label { Text = "Suvidha POS will be available from the Finish screen.", ForeColor = Green, AutoSize = true, Location = new Point(24, 66) });
+        backupBox = new TextBox { Dock = DockStyle.Fill, Text = state.BackupPath ?? FindLocalBackup() ?? "" };
+        backupLayout.Controls.Add(backupBox, 0, 0);
+        var browse = MakeButton("Browse", 92, Color.FromArgb(7, 54, 108));
+        browse.Dock = DockStyle.Fill;
+        browse.Click += (_, _) => BrowseBackup();
+        backupLayout.Controls.Add(browse, 1, 0);
+
+        restoreBox = new CheckBox
+        {
+            Text = "Restore database after installation",
+            AutoSize = true,
+            ForeColor = TextColor,
+            Checked = !string.IsNullOrWhiteSpace(backupBox.Text)
+        };
+        backupLayout.Controls.Add(restoreBox, 0, 1);
+        restoreStatus = new Label { Text = "", ForeColor = Muted, Dock = DockStyle.Fill, AutoEllipsis = true };
+        backupLayout.Controls.Add(restoreStatus, 1, 1);
+
+        var info = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(5, 0, 0, 8), Padding = new Padding(16) };
+        grid.Controls.Add(info, 1, 0);
+        AddSectionTitle(info, "Database Information", "Windows authentication", 14);
+
+        var infoLayout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, BackColor = Color.Transparent, Margin = new Padding(0, 12, 0, 0) };
+        infoLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        infoLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        infoLayout.Controls.Add(new Label { Text = "Server Name", ForeColor = Muted, Dock = DockStyle.Top, Height = 22 }, 0, 0);
+        infoLayout.Controls.Add(new Label { Text = "Database Name", ForeColor = Muted, Dock = DockStyle.Top, Height = 22 }, 1, 0);
+        serverBox = new TextBox { Dock = DockStyle.Top, Text = state.ServerName ?? "localhost" };
+        databaseBox = new TextBox { Dock = DockStyle.Top, Text = state.DatabaseName ?? "SuvidhaPOS" };
+        infoLayout.Controls.Add(serverBox, 0, 1);
+        infoLayout.Controls.Add(databaseBox, 1, 1);
+        info.Controls.Add(infoLayout);
+
+        var restoreCard = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 5, 8), Padding = new Padding(16) };
+        grid.Controls.Add(restoreCard, 0, 1);
+        AddSectionTitle(restoreCard, "Database Restore", "Restore the selected backup with replacement.", 14);
+
+        var restoreButtons = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            Height = 48,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 10, 0, 0)
+        };
+        restoreCard.Controls.Add(restoreButtons);
+        var restoreButton = MakeGradientButton("Restore Database", 170);
+        var testButton = MakeButton("Test Connection", 150, Color.FromArgb(7, 54, 108));
+        restoreButtons.Controls.Add(restoreButton);
+        restoreButtons.Controls.Add(testButton);
+        restoreButton.Click += async (_, _) => await RestoreOnlyAsync();
+        testButton.Click += async (_, _) => await TestConnectionAsync();
+
+        restoreCard.Controls.Add(new Label
+        {
+            Text = "SQL Server setup screens remain interactive. Use Default Instance if required.",
+            ForeColor = Muted,
+            Dock = DockStyle.Fill,
+            Padding = new Padding(0, 8, 0, 0),
+            AutoEllipsis = true
+        });
+
+        var config = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(5, 0, 0, 8), Padding = new Padding(16) };
+        grid.Controls.Add(config, 1, 1);
+        AddSectionTitle(config, "Suvidha POS Configuration", "Updates SuvidhaPos.exe.config or RetailPos.exe.config.", 14);
+
+        var configButtons = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            Height = 48,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 10, 0, 0)
+        };
+        config.Controls.Add(configButtons);
+        var findButton = MakeButton("Detect Application", 170, Color.FromArgb(7, 54, 108));
+        var saveButton = MakeGradientButton("Save SQL Config", 160);
+        configButtons.Controls.Add(findButton);
+        configButtons.Controls.Add(saveButton);
+        findButton.Click += (_, _) => DetectConfig();
+        saveButton.Click += (_, _) => SaveConfigFromStep();
+
+        configStatus = new Label { Text = "", ForeColor = Muted, Dock = DockStyle.Fill, AutoEllipsis = true, Padding = new Padding(0, 8, 0, 0) };
+        config.Controls.Add(configStatus);
+
+        var note = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 5, 0), Padding = new Padding(16) };
+        grid.Controls.Add(note, 0, 2);
+        AddSectionTitle(note, "Resume Protection", "Progress is saved automatically.", 14);
+        note.Controls.Add(new Label
+        {
+            Text = "If Windows restarts, the installer can reopen at the saved step and reuse completed files.",
+            ForeColor = TextColor,
+            Dock = DockStyle.Fill,
+            Padding = new Padding(0, 8, 0, 0),
+            AutoEllipsis = true
+        });
+
+        var finishNote = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(5, 0, 0, 0), Padding = new Padding(16) };
+        grid.Controls.Add(finishNote, 1, 2);
+        AddSectionTitle(finishNote, "Ready", "After configuration, continue to Finish.", 14);
+        finishNote.Controls.Add(new Label
+        {
+            Text = "Suvidha POS will be available from the Finish screen.",
+            ForeColor = Green,
+            Dock = DockStyle.Fill,
+            Padding = new Padding(0, 8, 0, 0),
+            AutoEllipsis = true
+        });
+
         DetectConfig();
     }
 
     private void BuildFinish()
     {
         StartPage("Finish", "Installation complete.", "Finish  ✓");
-        setupFinished = true; state.SetupCompleted = true; SaveState(); RemoveResumeTask();
-        var hero = new RoundedCard { Dock = DockStyle.Top, Height = 240, Margin = new Padding(0, 0, 0, 14) }; pageBody.Controls.Add(hero); hero.BringToFront();
-        hero.Controls.Add(new Label { Text = "✓", Font = new Font("Segoe UI", 60F, FontStyle.Bold), ForeColor = Green, AutoSize = true, Location = new Point(35, 42) });
-        hero.Controls.Add(new Label { Text = "Installation completed successfully!", Font = new Font("Segoe UI Semibold", 23F), ForeColor = TextColor, AutoSize = true, Location = new Point(135, 48) });
-        hero.Controls.Add(new Label { Text = "All selected components are installed successfully on your computer.", Font = new Font("Segoe UI", 11F), ForeColor = Muted, AutoSize = true, Location = new Point(137, 92) });
-        var launch = MakeGradientButton("Launch Suvidha POS", 205); launch.Location = new Point(137, 137); hero.Controls.Add(launch); launch.Click += (_, _) => LaunchPos();
-        var list = new RoundedCard { Dock = DockStyle.Fill, Padding = new Padding(24, 18, 24, 10) }; pageBody.Controls.Add(list); list.BringToFront(); AddSectionTitle(list, "Installation Summary", "Completed components", 15);
-        int y = 60; foreach (var c in components.Where(x => x.Selected)) { list.Controls.Add(new Label { Text = "●", ForeColor = Green, Font = new Font("Segoe UI", 11F), AutoSize = true, Location = new Point(24, y) }); list.Controls.Add(new Label { Text = c.Name, ForeColor = TextColor, Font = new Font("Segoe UI Semibold", 10F), AutoSize = true, Location = new Point(50, y) }); list.Controls.Add(new Label { Text = "Installed", ForeColor = Green, AutoSize = true, Location = new Point(500, y) }); y += 34; }
+        setupFinished = true;
+        state.SetupCompleted = true;
+        SaveState();
+        RemoveResumeTask();
+
+        var stack = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            ColumnCount = 1,
+            RowCount = 2,
+            AutoSize = true,
+            BackColor = Color.Transparent,
+            Padding = new Padding(0, 2, 0, 2)
+        };
+        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 190));
+        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 220));
+        pageBody.Controls.Add(stack);
+
+        var hero = new RoundedCard { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 10), Padding = new Padding(20) };
+        stack.Controls.Add(hero, 0, 0);
+
+        var heroGrid = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, BackColor = Color.Transparent };
+        heroGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 82));
+        heroGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        heroGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 58));
+        heroGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        hero.Controls.Add(heroGrid);
+
+        var check = new Label
+        {
+            Text = "✓",
+            Font = new Font("Segoe UI", 42F, FontStyle.Bold),
+            ForeColor = Green,
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleCenter
+        };
+        heroGrid.Controls.Add(check, 0, 0);
+        heroGrid.SetRowSpan(check, 2);
+
+        heroGrid.Controls.Add(new Label
+        {
+            Text = "Installation completed successfully!",
+            Font = new Font("Segoe UI Semibold", 20F),
+            ForeColor = TextColor,
+            Dock = DockStyle.Fill,
+            AutoEllipsis = true,
+            TextAlign = ContentAlignment.MiddleLeft
+        }, 1, 0);
+
+        var launch = MakeGradientButton("Launch Suvidha POS", 200);
+        launch.Anchor = AnchorStyles.Left;
+        heroGrid.Controls.Add(launch, 1, 1);
+        launch.Click += (_, _) => LaunchPos();
+
+        var list = new RoundedCard { Dock = DockStyle.Fill, Padding = new Padding(18), Margin = Padding.Empty };
+        stack.Controls.Add(list, 0, 1);
+        AddSectionTitle(list, "Installation Summary", "Selected components", 14);
+
+        var rows = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            AutoScroll = true,
+            BackColor = Color.Transparent,
+            Margin = new Padding(0, 38, 0, 0)
+        };
+        rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 75));
+        rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
+        list.Controls.Add(rows);
+
+        int row = 0;
+        foreach (var c in components.Where(x => x.Selected))
+        {
+            rows.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
+            rows.Controls.Add(new Label { Text = "●  " + c.Name, ForeColor = TextColor, Dock = DockStyle.Fill, AutoEllipsis = true }, 0, row);
+            rows.Controls.Add(new Label { Text = "Installed", ForeColor = Green, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleRight }, 1, row);
+            row++;
+        }
     }
 
     private async void NextClicked(object? sender, EventArgs e)
     {
         if (busy) return;
         if (step == 6) { Close(); return; }
-        if (step == 0)
-        {
-            MarkDone("welcome");
-            ShowStep(1);
-            return;
-        }
         if (step == 1)
         {
             if (!terms.Checked) { MessageBox.Show(this, "Please accept the Terms & Conditions first.", "Suvidha POS Installer", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
@@ -725,7 +1193,7 @@ public sealed class MainForm : Form
 
     private async Task DownloadAllAsync()
     {
-        busy = true; SetButtons(false); Directory.CreateDirectory(DownloadDir);
+        busy = true; SetButtons(false); Directory.CreateDirectory(SoftwareFolder);
         var selected = components.Where(x => x.Selected).ToList();
         int doneCount = 0;
         foreach (var c in selected)
@@ -741,7 +1209,7 @@ public sealed class MainForm : Form
                 else
                 {
                     var ext = c.Kind == ComponentKind.Msi ? ".msi" : ".exe";
-                    var target = Path.Combine(DownloadDir, SafeFileName(c.Name) + ext);
+                    var target = Path.Combine(SoftwareFolder, SafeFileName(c.Name) + ext);
                     if (!File.Exists(target) || new FileInfo(target).Length < 1024 * 100) await DownloadDriveFileAsync(c, target);
                     files[c.Name] = target; c.Status = "Downloaded"; UpdateComponent(c, 100);
                 }
@@ -754,7 +1222,7 @@ public sealed class MainForm : Form
 
     private async Task DownloadDriveFileAsync(ComponentItem c, string target)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+        Directory.CreateDirectory(SoftwareFolder);
         var url = $"https://drive.usercontent.google.com/download?id={Uri.EscapeDataString(c.DriveId)}&export=download&confirm=t";
         using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
@@ -889,9 +1357,15 @@ public sealed class MainForm : Form
         try { Process.Start(new ProcessStartInfo(found.Value.ExePath) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(found.Value.ExePath)! }); } catch (Exception ex) { MessageBox.Show(this, ex.Message, "Suvidha POS", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
 
-    private string? FindLocalMsi() => Directory.Exists(SoftwareFolder) ? Directory.EnumerateFiles(SoftwareFolder, "*.msi", SearchOption.TopDirectoryOnly).OrderBy(x => x).FirstOrDefault() : null;
+    private string? FindLocalMsi()
+    {
+        if (!Directory.Exists(SoftwareFolder)) return null;
+        var msis = Directory.EnumerateFiles(SoftwareFolder, "*.msi", SearchOption.TopDirectoryOnly).OrderBy(x => x).ToList();
+        return msis.FirstOrDefault(x => Path.GetFileName(x).Contains("suvidha", StringComparison.OrdinalIgnoreCase))
+            ?? msis.FirstOrDefault();
+    }
     private string? FindLocalVcRedist() => Directory.Exists(SoftwareFolder) ? Directory.EnumerateFiles(SoftwareFolder, "*.exe", SearchOption.TopDirectoryOnly).FirstOrDefault(x => { var n = Path.GetFileName(x); return n.Contains("vcredist", StringComparison.OrdinalIgnoreCase) || n.Contains("vc_redist", StringComparison.OrdinalIgnoreCase); }) : null;
-    private string? FindLocalBackup() => Directory.Exists(SoftwareFolder) ? Directory.EnumerateFiles(SoftwareFolder, "*.*", SearchOption.AllDirectories).FirstOrDefault(x => x.EndsWith(".bak", StringComparison.OrdinalIgnoreCase) || x.EndsWith(".backup", StringComparison.OrdinalIgnoreCase)) : null;
+    private string? FindLocalBackup() => Directory.Exists(SoftwareFolder) ? Directory.EnumerateFiles(SoftwareFolder, "*.*", SearchOption.TopDirectoryOnly).FirstOrDefault(x => x.EndsWith(".bak", StringComparison.OrdinalIgnoreCase) || x.EndsWith(".backup", StringComparison.OrdinalIgnoreCase)) : null;
 
     private bool AllDownloadsReady() => components.Where(x => x.Selected).All(x => files.ContainsKey(x.Name) && File.Exists(files[x.Name]));
     private static string SafeFileName(string s) { foreach (var c in Path.GetInvalidFileNameChars()) s = s.Replace(c, '_'); return s; }
@@ -923,196 +1397,290 @@ public sealed class MainForm : Form
 
     private class RoundedCard : Panel
     {
-        public RoundedCard()
+        public RoundedCard() { BackColor = Color.FromArgb(6, 24, 50); Padding = new Padding(10); Margin = new Padding(0); DoubleBuffered = true; }
+        protected override void OnPaint(PaintEventArgs e)
         {
-            BackColor = CardBg;
-            BorderStyle = BorderStyle.FixedSingle;
-            Padding = new Padding(10);
-            Margin = new Padding(0);
-            DoubleBuffered = true;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            // Clear the previous frame first. Without this, rounded cards can leave
+            // repeated border trails/artifacts when the window is resized or DPI changes.
+            e.Graphics.Clear(Parent?.BackColor ?? Color.FromArgb(4, 12, 25));
+            using var path = RoundRect(new Rectangle(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1)), 12);
+            using var b = new SolidBrush(BackColor);
+            e.Graphics.FillPath(b, path);
+            using var p = new Pen(Color.FromArgb(22, 78, 129));
+            e.Graphics.DrawPath(p, path);
+            base.OnPaint(e);
         }
+        private static GraphicsPath RoundRect(Rectangle r, int radius) { var p = new GraphicsPath(); int d = radius * 2; p.AddArc(r.X, r.Y, d, d, 180, 90); p.AddArc(r.Right - d, r.Y, d, d, 270, 90); p.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90); p.AddArc(r.X, r.Bottom - d, d, d, 90, 90); p.CloseFigure(); return p; }
     }
 
     private sealed class FeatureCard : Panel
     {
-        public Color Accent { get; set; } = Blue;
-
-        public FeatureCard()
+        public Color Accent { get; set; } = Color.Blue;
+        public FeatureCard() { BackColor = Color.FromArgb(5, 27, 55); DoubleBuffered = true; }
+        protected override void OnPaint(PaintEventArgs e)
         {
-            BackColor = CardBg2;
-            BorderStyle = BorderStyle.FixedSingle;
-            DoubleBuffered = true;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            e.Graphics.Clear(Parent?.BackColor ?? Color.FromArgb(4, 12, 25));
+            using var b = new SolidBrush(BackColor);
+            e.Graphics.FillRectangle(b, ClientRectangle);
+            using var p = new Pen(Color.FromArgb(30, Accent.R, Accent.G, Accent.B));
+            e.Graphics.DrawRectangle(p, 0, 0, Math.Max(0, Width - 1), Math.Max(0, Height - 1));
+            base.OnPaint(e);
         }
     }
 
     private sealed class StepItem : Panel
     {
-        private readonly Label number;
-        private readonly Label title;
-        private readonly Label sub;
-        private bool active;
-        private bool done;
+        private readonly Label number, title, sub;
+        private bool active, done, compact;
 
-        public bool Active
-        {
-            get => active;
-            set { active = value; ApplyStyle(); }
-        }
-
+        public bool Active { get => active; set { active = value; Invalidate(); } }
         public bool Done
         {
             get => done;
+            set { done = value; number.Text = done ? "✓" : number.Tag?.ToString() ?? ""; Invalidate(); }
+        }
+        public bool Compact
+        {
+            get => compact;
             set
             {
-                done = value;
-                number.Text = done ? "✓" : number.Tag?.ToString() ?? "";
-                ApplyStyle();
+                compact = value;
+                title.Visible = !value;
+                sub.Visible = !value;
+                number.Size = value ? new Size(42, 42) : new Size(38, 38);
+                number.Location = value ? new Point((Width - 42) / 2, 10) : new Point(12, 15);
+                Invalidate();
             }
         }
 
         public StepItem(int n, string name, string subtitle)
         {
-            BackColor = SidebarBg;
-            BorderStyle = BorderStyle.FixedSingle;
-            DoubleBuffered = true;
-
             number = new Label
             {
                 Text = n.ToString(),
                 Tag = n.ToString(),
                 TextAlign = ContentAlignment.MiddleCenter,
-                Size = new Size(42, 42),
-                Location = new Point(14, 22),
-                Font = new Font("Segoe UI Semibold", 14F),
-                ForeColor = Color.White
+                Size = new Size(38, 38),
+                Location = new Point(12, 15),
+                Font = new Font("Segoe UI Semibold", 13F),
+                ForeColor = Color.White,
+                BackColor = Color.Transparent
             };
-            Controls.Add(number);
-
             title = new Label
             {
                 Text = name,
-                AutoSize = true,
-                Font = new Font("Segoe UI Semibold", 10.5F),
-                ForeColor = TextColor,
-                Location = new Point(70, 18)
+                AutoSize = false,
+                Font = new Font("Segoe UI Semibold", 9.5F),
+                ForeColor = Color.White,
+                Location = new Point(60, 11),
+                Width = 135,
+                Height = 22,
+                AutoEllipsis = true
             };
-            Controls.Add(title);
-
             sub = new Label
             {
                 Text = subtitle,
-                AutoSize = true,
-                Font = new Font("Segoe UI", 8.5F),
-                ForeColor = Muted,
-                Location = new Point(70, 47)
+                AutoSize = false,
+                Font = new Font("Segoe UI", 7.5F),
+                ForeColor = MutedStatic,
+                Location = new Point(60, 34),
+                Width = 135,
+                Height = 18,
+                AutoEllipsis = true
             };
+            Controls.Add(number);
+            Controls.Add(title);
             Controls.Add(sub);
 
-            ApplyStyle();
+            Resize += (_, _) =>
+            {
+                if (!compact)
+                {
+                    title.Width = Math.Max(70, Width - 68);
+                    sub.Width = Math.Max(70, Width - 68);
+                }
+            };
         }
 
-        private void ApplyStyle()
+        private static Color MutedStatic => Color.FromArgb(154, 177, 202);
+
+        protected override void OnPaint(PaintEventArgs e)
         {
-            BackColor = active ? Color.FromArgb(12, 38, 70) : SidebarBg;
-            BorderStyle = BorderStyle.FixedSingle;
-            number.BackColor = done
-                ? Green
-                : active ? Blue : Color.FromArgb(20, 40, 68);
-            number.ForeColor = Color.White;
-            title.ForeColor = TextColor;
-            sub.ForeColor = Muted;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using var bg = new SolidBrush(active ? Color.FromArgb(30, 23, 100, 170) : Color.FromArgb(7, 23, 44));
+            e.Graphics.FillRectangle(bg, ClientRectangle);
+            using var p = new Pen(active ? Color.FromArgb(0, 180, 255) : Color.FromArgb(22, 60, 96));
+            e.Graphics.DrawRectangle(p, 0, 0, Math.Max(0, Width - 1), Math.Max(0, Height - 1));
+            var size = compact ? 42 : 38;
+            var x = compact ? Math.Max(0, (Width - size) / 2) : 12;
+            var y = compact ? 10 : 15;
+            using var c = new SolidBrush(done ? Color.FromArgb(29, 190, 110) : active ? Color.FromArgb(12, 119, 225) : Color.FromArgb(20, 40, 68));
+            e.Graphics.FillEllipse(c, x, y, size, size);
+            base.OnPaint(e);
         }
     }
 
     private sealed class HelpCard : Panel
     {
+        private readonly Label icon, title, text, contact;
+        private bool compact;
+
+        public bool Compact
+        {
+            get => compact;
+            set
+            {
+                compact = value;
+                title.Visible = !value;
+                text.Visible = !value;
+                contact.Visible = !value;
+                icon.Text = value ? "?" : "◉";
+                icon.Font = new Font("Segoe UI Symbol", value ? 18F : 24F, FontStyle.Bold);
+                icon.Dock = value ? DockStyle.Fill : DockStyle.Top;
+                icon.Height = value ? 0 : 30;
+                icon.TextAlign = value ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
+            }
+        }
+
         public HelpCard()
         {
-            BackColor = CardBg;
-            BorderStyle = BorderStyle.FixedSingle;
-            Padding = new Padding(18);
+            BackColor = Color.FromArgb(6, 24, 50);
+            Padding = new Padding(10);
             DoubleBuffered = true;
 
-            Controls.Add(new Label
+            icon = new Label
+            {
+                Text = "◉",
+                Font = new Font("Segoe UI Symbol", 24F),
+                ForeColor = Color.FromArgb(72, 184, 255),
+                AutoSize = false,
+                Height = 30,
+                Dock = DockStyle.Top,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            title = new Label
             {
                 Text = "Need Help?",
-                Font = new Font("Segoe UI Semibold", 13F),
-                ForeColor = Cyan,
-                AutoSize = true,
-                Location = new Point(18, 16)
-            });
-            Controls.Add(new Label
+                Font = new Font("Segoe UI Semibold", 12F),
+                ForeColor = Color.FromArgb(0, 190, 255),
+                AutoSize = false,
+                Height = 22,
+                Dock = DockStyle.Top
+            };
+            text = new Label
             {
-                Text = "We're here to help you",
-                Font = new Font("Segoe UI", 9F),
+                Text = "Support is available if you need help.",
+                Font = new Font("Segoe UI", 7.5F),
                 ForeColor = TextColor,
-                AutoSize = true,
-                Location = new Point(18, 48)
-            });
-            Controls.Add(new Label
+                AutoSize = false,
+                Height = 28,
+                Dock = DockStyle.Top,
+                AutoEllipsis = true
+            };
+            contact = new Label
             {
                 Text = "+91 70042 52545",
-                Font = new Font("Segoe UI Semibold", 11F),
-                ForeColor = Cyan,
-                AutoSize = true,
-                Location = new Point(18, 78)
-            });
-            Controls.Add(new Label
-            {
-                Text = "support@suvidhapos.com",
-                Font = new Font("Segoe UI", 9.5F),
-                ForeColor = TextColor,
-                AutoSize = true,
-                Location = new Point(18, 108)
-            });
+                Font = new Font("Segoe UI Semibold", 9F),
+                ForeColor = Color.FromArgb(0, 190, 255),
+                AutoSize = false,
+                Height = 22,
+                Dock = DockStyle.Top
+            };
+
+            Controls.Add(contact);
+            Controls.Add(text);
+            Controls.Add(title);
+            Controls.Add(icon);
         }
     }
 
     private sealed class ComponentSelectCard : RoundedCard
     {
         public CheckBox Check { get; }
+
         public ComponentSelectCard(ComponentItem c)
         {
-            Check = new CheckBox { Checked = c.Selected, AutoSize = true, Location = new Point(Width - 38, 28), Anchor = AnchorStyles.Top | AnchorStyles.Right }; Controls.Add(Check); Check.CheckedChanged += (_, _) => c.Selected = Check.Checked;
-            Controls.Add(new Label { Text = c.Kind == ComponentKind.Msi ? "▣" : c.Kind == ComponentKind.Local ? "▰" : "▤", Font = new Font("Segoe UI Symbol", 20F), ForeColor = c.Kind == ComponentKind.Local ? Green : Blue, AutoSize = true, Location = new Point(18, 18) });
-            Controls.Add(new Label { Text = c.Name, Font = new Font("Segoe UI Semibold", 10.5F), ForeColor = TextColor, AutoSize = true, Location = new Point(58, 13) });
-            Controls.Add(new Label { Text = c.Description, Font = new Font("Segoe UI", 8.5F), ForeColor = Muted, AutoSize = true, Location = new Point(58, 41) });
+            Padding = new Padding(14, 10, 14, 10);
+
+            var layout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 2,
+                BackColor = Color.Transparent,
+                Margin = Padding.Empty,
+                Padding = Padding.Empty
+            };
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 38));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 30));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            Controls.Add(layout);
+
+            var icon = new Label
+            {
+                Text = c.Kind == ComponentKind.Msi ? "▣" : c.Kind == ComponentKind.Local ? "▰" : "▤",
+                Font = new Font("Segoe UI Symbol", 17F),
+                ForeColor = c.Kind == ComponentKind.Local ? Green : Blue,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            layout.Controls.Add(icon, 0, 0);
+            layout.SetRowSpan(icon, 2);
+
+            layout.Controls.Add(new Label
+            {
+                Text = c.Name,
+                Font = new Font("Segoe UI Semibold", 9.5F),
+                ForeColor = TextColor,
+                Dock = DockStyle.Fill,
+                AutoEllipsis = true
+            }, 1, 0);
+            layout.Controls.Add(new Label
+            {
+                Text = c.Description,
+                Font = new Font("Segoe UI", 8F),
+                ForeColor = Muted,
+                Dock = DockStyle.Fill,
+                AutoEllipsis = true
+            }, 1, 1);
+
+            Check = new CheckBox
+            {
+                Checked = c.Selected,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(2, 5, 2, 2)
+            };
+            layout.Controls.Add(Check, 2, 0);
+            layout.SetRowSpan(Check, 2);
+            Check.CheckedChanged += (_, _) => c.Selected = Check.Checked;
         }
     }
 
     private sealed class GradientPanel : Panel
     {
-        public Color StartColor { get; set; } = Color.Black;
-        public Color EndColor { get; set; } = Color.Black;
-
-        public GradientPanel()
-        {
-            BackColor = Bg;
-            DoubleBuffered = true;
-        }
+        public Color StartColor { get; set; } = Color.Black; public Color EndColor { get; set; } = Color.Black;
+        protected override void OnPaintBackground(PaintEventArgs e) { using var b = new LinearGradientBrush(ClientRectangle, StartColor, EndColor, 0F); e.Graphics.FillRectangle(b, ClientRectangle); }
     }
 
     private sealed class GradientLabel : Label
     {
-        public GradientLabel()
+        protected override void OnPaint(PaintEventArgs e)
         {
-            ForeColor = Color.FromArgb(194, 124, 255);
-            AutoEllipsis = true;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using var path = new GraphicsPath();
+            path.AddString(Text, Font.FontFamily, (int)Font.Style, Font.Size * e.Graphics.DpiY / 72f, new PointF(0, 0), StringFormat.GenericDefault);
+            using var brush = new LinearGradientBrush(ClientRectangle, Color.FromArgb(115, 87, 255), Color.FromArgb(255, 65, 72), 0F);
+            e.Graphics.FillPath(brush, path);
         }
     }
 
     private sealed class GradientButton : Button
     {
-        public Color StartColor { get; set; } = Blue;
-        public Color EndColor { get; set; } = Blue;
-
-        public GradientButton()
-        {
-            BackColor = Blue;
-            FlatStyle = FlatStyle.Flat;
-            FlatAppearance.BorderSize = 0;
-            UseVisualStyleBackColor = false;
-        }
+        public Color StartColor { get; set; } = Color.Purple; public Color EndColor { get; set; } = Color.Orange;
+        protected override void OnPaint(PaintEventArgs e) { e.Graphics.SmoothingMode = SmoothingMode.AntiAlias; using var b = new LinearGradientBrush(ClientRectangle, StartColor, EndColor, 0F); e.Graphics.FillRectangle(b, ClientRectangle); TextRenderer.DrawText(e.Graphics, Text, Font, ClientRectangle, ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter); }
     }
-
 }

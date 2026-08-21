@@ -1,14 +1,24 @@
-FINAL WORKING UI CROSS-CHECK
+Suvidha POS Installer V2.2 - UI + Download Cross Check
 
-Confirmed fixes:
-1. Welcome page Next button now explicitly executes ShowStep(1).
-2. Next button remains wired to NextClicked.
-3. Welcome screen uses a simpler responsive native WinForms layout.
-4. Large headline/feature cards are reduced so text does not overlap.
-5. At narrow widths the feature cards switch to a clean 2x2 layout.
-6. Minimum window remains 800x600 and DPI scaling remains enabled.
-7. Custom GDI OnPaint renderer remains prohibited.
-8. Resume state and Windows logon resume task remain preserved.
-9. Build script and GitHub Actions both validate the Next navigation fix.
+Verified source changes:
+- Responsive shell uses DPI scaling and collapsible navigation at narrow widths.
+- Welcome page no longer uses fixed-position title/feature blocks that can overlap.
+- Terms page uses docked layout instead of fixed 900x500 controls.
+- Components, Download, Install and Setup pages use TableLayoutPanel/FlowLayoutPanel sizing.
+- Footer uses a responsive table layout for progress + buttons.
+- Sidebar switches to compact numbered navigation on narrow windows.
+- Custom painted cards/buttons remain double-buffered to reduce flicker.
+- No HorizontalScroll property is used on generic Control.
+- Software directory is exactly: D:\Suvidha Pos\Software
+- Download targets are flat files directly inside that directory.
+- No DownloadDir/AppData software download directory is used.
+- Local MSI, VC++ and backup checks use TopDirectoryOnly for the software folder.
+- Existing files in D:\Suvidha Pos\Software are reused.
+- The installed installer application path is exactly C:\Suvidha Soft Installer.
+- SQL Server/SSMS/Crystal download logic remains intact.
+- x64 self-contained .NET 8 build and Inno Setup packaging remain intact.
+- GitHub Actions performs the final authoritative Windows build.
 
-This package is intended to replace the previous ZIP completely.
+Important:
+- This environment does not contain the Windows .NET SDK/Inno Setup compiler, so the attached package is source/build-ready, not a falsely claimed locally compiled Windows EXE.
+- The GitHub Actions workflow must finish successfully before treating the Setup EXE as release-ready.

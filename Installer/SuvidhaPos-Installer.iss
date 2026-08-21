@@ -1,5 +1,5 @@
 #define MyAppName "Suvidha POS Installer"
-#define MyAppVersion "2.1.0"
+#define MyAppVersion "2.2.0"
 #define MyAppPublisher "Suvidha POS"
 #define MyAppExeName "SuvidhaPos-Installer.exe"
 
@@ -8,7 +8,7 @@ AppId={{D8B4B6D5-6C4E-4F0A-9F70-9B3B4F9C2D10}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\SuvidhaPOS Setup
+DefaultDirName=C:\Suvidha Soft Installer
 DefaultGroupName=Suvidha POS
 OutputDir=..\release
 OutputBaseFilename=SuvidhaPOS-Installer-Setup

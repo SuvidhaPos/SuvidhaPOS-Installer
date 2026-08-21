@@ -1,19 +1,21 @@
-BUILD NOTES - 2.1.2
+BUILD NOTES - 2.2.0
 
-Build configuration alignment:
-- build.ps1 and .github/workflows/build.yml now use the same .NET 8 win-x64 build/publish settings.
-- PublishSingleFile=false and PublishTrimmed=false are enforced in both paths.
-- The complete self-contained publish folder is passed to Inno Setup.
-- The local PowerShell build validates the EXE, DLL and Suvidha POS logo assets before packaging.
-- The local script accepts the standard Inno Setup 6 install path under either Program Files (x86) or Program Files.
+UI:
+- Rebuilt the responsive WinForms layout to avoid fixed-position overlap.
+- DPI scaling is configured through the .NET project (PerMonitorV2), not manifest dpi settings.
+- Narrow windows use a compact sidebar instead of squeezing navigation text.
+- Footer, welcome, component, download, install and setup layouts resize with the window.
+- Custom cards are double-buffered to reduce repaint/flicker artifacts.
 
-Windows startup/resume:
-- The installer saves progress to %ProgramData%\SuvidhaPOS\Installer\resume.json.
-- A Scheduled Task named "SuvidhaPOS Installer Resume" is created while setup is incomplete.
-- The task launches the installer at interactive logon after Windows restart/power recovery.
-- The task is removed when the Finish step marks setup complete.
+Downloads:
+- Exact software/download directory: D:\Suvidha Pos\Software
+- Installer application directory: C:\Suvidha Soft Installer
+- All downloaded installers are saved directly in that directory.
+- No software subfolders are created.
+- Local file detection is flat (TopDirectoryOnly) for MSI, VC++ and backup files.
 
-UI/assets:
-- Premium 7-step WinForms UI is retained.
-- SuvidhaPOS logo/icon and wizard assets are retained.
-- The application manifest keeps PerMonitorV2 DPI awareness for responsive rendering.
+Build:
+- Self-contained win-x64 .NET 8 publish.
+- PublishSingleFile=false.
+- Full publish directory is packaged by Inno Setup.
+- GitHub Actions performs the authoritative Windows build.
