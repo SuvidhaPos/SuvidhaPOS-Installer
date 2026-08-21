@@ -54,3 +54,15 @@ The workflow rejects the old UI patch files and checks the source for obsolete U
 ## UI build safety
 
 The reference UI skin does not access protected WinForms members such as `Control.DoubleBuffered`.
+## Fixed UI Frame
+
+The installer intentionally uses a fixed 1366 x 768 client area. The window is not resizable or maximizable, and WinForms automatic layout/DPI scaling is disabled so the seven reference screens keep the same composition and readable text. Build-time PowerShell source-rewriter scripts are not used.
+
+The installer flow remains:
+1. Welcome
+2. Terms & Conditions
+3. Components
+4. Download
+5. Install
+6. Database Setup
+7. Finish

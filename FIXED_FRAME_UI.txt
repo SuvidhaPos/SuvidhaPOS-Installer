@@ -1,0 +1,6 @@
+Suvidha POS Installer fixed-frame UI
+
+Target client area: 1366 x 768 pixels
+Form is non-resizable, maximize disabled.
+WinForms automatic scaling disabled; application runs DPI-unaware so the fixed logical frame is preserved.
+All UI changes are direct in MainForm.cs; no build-time source rewriting scripts are used.

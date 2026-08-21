@@ -107,8 +107,10 @@ public sealed class MainForm : Form
 
         Text = "Suvidha POS Installer";
         StartPosition = FormStartPosition.CenterScreen;
-        MinimumSize = new Size(1024, 768);
-        Size = new Size(1366, 768);
+        ClientSize = new Size(1366, 768);
+        FormBorderStyle = FormBorderStyle.FixedSingle;
+        MaximizeBox = false;
+        MinimizeBox = true;
         AutoScaleMode = AutoScaleMode.None;
         BackColor = Bg;
         ForeColor = TextColor;
@@ -180,7 +182,7 @@ public sealed class MainForm : Form
         shellRoot = root;
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 250));
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 68));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         Controls.Add(root);
 
@@ -280,8 +282,8 @@ public sealed class MainForm : Form
             int targetStep = i;
             var item = new StepItem(i + 1, names[i], subs[i])
             {
-                Width = 228,
-                Height = 70,
+                Width = 230,
+                Height = 78,
                 Tag = targetStep,
                 Margin = new Padding(0, 0, 0, 7)
             };
@@ -291,8 +293,8 @@ public sealed class MainForm : Form
 
         var help = new HelpCard
         {
-            Width = 228,
-            Height = 112,
+            Width = 230,
+            Height = 120,
             Margin = new Padding(0, 7, 0, 0)
         };
         sidebar.Controls.Add(help);
@@ -306,7 +308,6 @@ public sealed class MainForm : Form
         };
         root.Controls.Add(content, 1, 1);
 
-        Resize += (_, _) => ApplyResponsiveShell();
         ApplyResponsiveShell();
     }
 
@@ -314,31 +315,23 @@ public sealed class MainForm : Form
     {
         if (shellRoot == null || sidebar == null || content == null) return;
 
-        int w = ClientSize.Width;
-        int h = ClientSize.Height;
-        int sidebarWidth = Math.Clamp((int)Math.Round(w * 0.20), 220, 250);
-        int headerHeight = Math.Clamp((int)Math.Round(h * 0.085), 62, 72);
+        shellRoot.ColumnStyles[0].Width = 250;
+        shellRoot.RowStyles[0].Height = 76;
 
-        shellRoot.ColumnStyles[0].Width = sidebarWidth;
-        shellRoot.RowStyles[0].Height = headerHeight;
-
-        int innerWidth = Math.Max(190, sidebarWidth - sidebar.Padding.Horizontal);
+        int innerWidth = 230;
         foreach (Control c in sidebar.Controls)
         {
             if (c is StepItem item)
             {
                 item.Width = innerWidth;
-                item.Height = h < 700 ? 64 : 70;
+                item.Height = 78;
             }
             else if (c is HelpCard help)
             {
                 help.Width = innerWidth;
-                help.Height = h < 700 ? 92 : 112;
+                help.Height = 120;
             }
         }
-
-        if (pageBody != null && !pageBody.IsDisposed)
-            pageBody.PerformLayout();
     }
 
     private void BuildFooter(Panel host, string action)
@@ -346,7 +339,7 @@ public sealed class MainForm : Form
         var footer = new TableLayoutPanel
         {
             Dock = DockStyle.Bottom,
-            Height = 64,
+            Height = 72,
             ColumnCount = 6,
             RowCount = 1,
             BackColor = Color.FromArgb(4, 14, 28),
@@ -577,7 +570,7 @@ public sealed class MainForm : Form
         var sourceHint = new Label
         {
             Text = $"Files are kept in: {SoftwareFolder}",
-            Font = new Font("Segoe UI Semibold", 9.5F),
+            Font = new Font("Segoe UI Semibold", 10F),
             ForeColor = Green,
             Dock = DockStyle.Fill,
             AutoEllipsis = true,
@@ -738,7 +731,7 @@ public sealed class MainForm : Form
             Text = "I accept the terms and conditions",
             AutoSize = true,
             ForeColor = TextColor,
-            Font = new Font("Segoe UI Semibold", 9.5F),
+            Font = new Font("Segoe UI Semibold", 10F),
             Anchor = AnchorStyles.Left,
             Margin = new Padding(4, 0, 0, 0)
         };
@@ -751,7 +744,7 @@ public sealed class MainForm : Form
         "By using this installer, you agree to the following terms and conditions.", "", 
         "1. The installer will download and launch third-party software packages required for Suvidha POS.",
         "2. Administrator privileges are required for protected Windows and SQL Server operations.",
-        "3. SQL Server setup remains interactive so you can choose Default Instance, authentication and other Microsoft setup options.",
+        "3. SQL Server and supporting components are installed automatically using predefined Suvidha POS settings.",
         "4. Database restore can overwrite an existing database. Keep a separate copy of your backup before restoring.",
         "5. The installer does not upload your database to Suvidha POS.",
         "6. You are responsible for software licensing, compatibility, disk space and the backup file you select.",
@@ -825,7 +818,7 @@ public sealed class MainForm : Form
         {
             var card = CreateProgressCard(c, true);
             card.Dock = DockStyle.Top;
-            card.Height = 78;
+            card.Height = 96;
             card.Margin = new Padding(0, 0, 0, 8);
             grid.Controls.Add(card);
         }
@@ -871,8 +864,8 @@ public sealed class MainForm : Form
         var card = new RoundedCard
         {
             Dock = DockStyle.Top,
-            Height = 78,
-            Padding = new Padding(14, 10, 14, 8),
+            Height = 96,
+            Padding = new Padding(14, 10, 14, 10),
             Margin = new Padding(0)
         };
 
@@ -912,7 +905,7 @@ public sealed class MainForm : Form
         var status = new Label
         {
             Text = c.Status,
-            Font = new Font("Segoe UI", 8F),
+            Font = new Font("Segoe UI", 8.5F),
             ForeColor = Muted,
             Dock = DockStyle.Fill,
             AutoEllipsis = true
@@ -965,7 +958,7 @@ public sealed class MainForm : Form
         {
             var card = CreateInstallCard(c);
             card.Dock = DockStyle.Top;
-            card.Height = 72;
+            card.Height = 92;
             card.Margin = new Padding(0, 0, 0, 8);
             grid.Controls.Add(card);
         }
@@ -1007,8 +1000,8 @@ public sealed class MainForm : Form
         var card = new RoundedCard
         {
             Dock = DockStyle.Top,
-            Height = 72,
-            Padding = new Padding(14, 8, 14, 8),
+            Height = 92,
+            Padding = new Padding(14, 10, 14, 10),
             Margin = new Padding(0)
         };
 
@@ -1048,7 +1041,7 @@ public sealed class MainForm : Form
         var status = new Label
         {
             Text = c.Status,
-            Font = new Font("Segoe UI", 8F),
+            Font = new Font("Segoe UI", 8.5F),
             ForeColor = Muted,
             Dock = DockStyle.Fill,
             AutoEllipsis = true
@@ -1410,12 +1403,101 @@ public sealed class MainForm : Form
 
     private static async Task RunInstallerAsync(string path, ComponentKind kind)
     {
-        ProcessStartInfo psi = kind == ComponentKind.Msi
-            ? new ProcessStartInfo("msiexec.exe", $"/i \"{path}\"") { UseShellExecute = true, Verb = "runas", WorkingDirectory = Path.GetDirectoryName(path)! }
-            : new ProcessStartInfo(path) { UseShellExecute = true, Verb = "runas", WorkingDirectory = Path.GetDirectoryName(path)! };
+        string fileName = Path.GetFileName(path);
+        ProcessStartInfo psi;
+
+        if (kind == ComponentKind.Msi)
+        {
+            psi = new ProcessStartInfo("msiexec.exe")
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                WorkingDirectory = Path.GetDirectoryName(path)!
+            };
+            psi.ArgumentList.Add("/i");
+            psi.ArgumentList.Add(path);
+            psi.ArgumentList.Add("/qn");
+            psi.ArgumentList.Add("/norestart");
+        }
+        else if (fileName.Contains("SQL Server 2019", StringComparison.OrdinalIgnoreCase))
+        {
+            if (IsSqlServerInstancePresent())
+            {
+                installSummary.Text = "SQL Server instance already installed — continuing.";
+                return;
+            }
+
+            psi = new ProcessStartInfo(path)
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                WorkingDirectory = Path.GetDirectoryName(path)!
+            };
+
+            foreach (string arg in new[]
+            {
+                "/Q",
+                "/ACTION=Install",
+                "/FEATURES=SQLEngine",
+                "/INSTANCENAME=SQLEXPRESS",
+                "/SQLSVCSTARTUPTYPE=Automatic",
+                "/ADDCURRENTUSERASSQLADMIN=True",
+                "/TCPENABLED=1",
+                "/IACCEPTSQLSERVERLICENSETERMS",
+                "/SUPPRESSPRIVACYSTATEMENTNOTICE",
+                "/UpdateEnabled=False",
+                "/INDICATEPROGRESS"
+            })
+                psi.ArgumentList.Add(arg);
+        }
+        else if (fileName.Contains("SSMS", StringComparison.OrdinalIgnoreCase))
+        {
+            psi = new ProcessStartInfo(path)
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                WorkingDirectory = Path.GetDirectoryName(path)!
+            };
+            psi.ArgumentList.Add("--quiet");
+            psi.ArgumentList.Add("--wait");
+            psi.ArgumentList.Add("--norestart");
+        }
+        else
+        {
+            psi = new ProcessStartInfo(path)
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                WorkingDirectory = Path.GetDirectoryName(path)!
+            };
+            psi.ArgumentList.Add("/quiet");
+            psi.ArgumentList.Add("/norestart");
+        }
+
         using var p = Process.Start(psi) ?? throw new InvalidOperationException("Windows could not start the installer.");
         await p.WaitForExitAsync();
-        if (p.ExitCode != 0 && p.ExitCode != 3010 && p.ExitCode != 1641) throw new InvalidOperationException($"Installer exited with code {p.ExitCode}.");
+        if (p.ExitCode != 0 && p.ExitCode != 3010 && p.ExitCode != 1641)
+            throw new InvalidOperationException($"Installer exited with code {p.ExitCode}.");
+    }
+
+    private static bool IsSqlServerInstancePresent()
+    {
+        foreach (var view in new[]
+        {
+            Microsoft.Win32.RegistryView.Registry64,
+            Microsoft.Win32.RegistryView.Registry32
+        })
+        {
+            try
+            {
+                using var baseKey = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, view);
+                using var key = baseKey.OpenSubKey(@"SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL");
+                if (key == null) continue;
+                if (key.GetValue("SQLEXPRESS") != null || key.GetValue("MSSQLSERVER") != null) return true;
+            }
+            catch { }
+        }
+        return false;
     }
 
     private async Task RestoreOnlyAsync()

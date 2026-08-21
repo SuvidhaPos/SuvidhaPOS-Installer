@@ -28,9 +28,12 @@ internal static class RuntimeFix
     public static void Apply(MainForm form)
     {
         form.AutoScaleMode = AutoScaleMode.None;
-        form.MinimumSize = new Size(1024, 768);
-        if (form.ClientSize.Width < 1024 || form.ClientSize.Height < 768)
-            form.ClientSize = new Size(1366, 768);
+        form.FormBorderStyle = FormBorderStyle.FixedSingle;
+        form.MaximizeBox = false;
+        form.MinimizeBox = true;
+        form.ClientSize = new Size(1366, 768);
+        form.MinimumSize = form.Size;
+        form.MaximumSize = form.Size;
 
         NormalizeSupportNumber(form);
 
@@ -40,7 +43,6 @@ internal static class RuntimeFix
             content.ControlAdded += (_, _) =>
             {
                 NormalizeSupportNumber(form);
-                InvokeResponsiveShell(form);
                 StartVcPrefetchIfNeeded(form);
             };
         }
@@ -48,19 +50,8 @@ internal static class RuntimeFix
         form.Shown += (_, _) =>
         {
             NormalizeSupportNumber(form);
-            InvokeResponsiveShell(form);
             StartVcPrefetchIfNeeded(form);
         };
-        form.Resize += (_, _) => InvokeResponsiveShell(form);
-    }
-
-    private static void InvokeResponsiveShell(MainForm form)
-    {
-        try
-        {
-            typeof(MainForm).GetMethod("ApplyResponsiveShell", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(form, null);
-        }
-        catch { }
     }
 
     private static void NormalizeSupportNumber(Control root)

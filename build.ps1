@@ -9,8 +9,6 @@ $iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
 if (Test-Path $publish) { Remove-Item $publish -Recurse -Force }
 if (Test-Path $release) { Remove-Item $release -Recurse -Force }
 
-& .\tools\ApplyInstallFlowFix.ps1
-& .\tools\ApplyInstallerUiFix.ps1
 
 dotnet restore $project --runtime win-x64
 
