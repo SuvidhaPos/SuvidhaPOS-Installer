@@ -28,27 +28,21 @@ jobs:
           $required = @(
             "SuvidhaPos-Installer.sln",
             "Installer/SuvidhaPos-Installer.csproj",
-            "Installer/MainForm.cs",
             "Installer/Program.cs",
-            "Installer/ReferenceUi.cs",
-            "Installer/RuntimeFix.cs",
+            "Installer/InstallerForm.cs",
+            "Installer/InstallerEngine.cs",
+            "Installer/Models/InstallerState.cs",
+            "Installer/Controls/StepNavigationControl.cs",
+            "Installer/Controls/ComponentProgressControl.cs",
+            "Installer/Steps/DynamicSteps.cs",
             "Installer/app.manifest",
             "Installer/SuvidhaPos-Installer.iss",
             "Assets/SuvidhaPOS.ico",
             "Assets/SuvidhaPOS.png",
-            "Assets/ReferenceUI/Step1.png",
-            "Assets/ReferenceUI/Step2.png",
-            "Assets/ReferenceUI/Step3.png",
-            "Assets/ReferenceUI/Step4.png",
-            "Assets/ReferenceUI/Step5.png",
-            "Assets/ReferenceUI/Step6.png",
-            "Assets/ReferenceUI/Step7.png",
             "docs/TermsAndConditions.txt"
           )
           $missing = @()
-          foreach ($file in $required) {
-            if (-not (Test-Path $file)) { $missing += $file }
-          }
+          foreach ($file in $required) { if (-not (Test-Path $file)) { $missing += $file } }
           if ($missing.Count -gt 0) {
             Write-Host "MISSING REQUIRED FILES"
             $missing | ForEach-Object { Write-Host "MISSING: $_" }
@@ -83,35 +77,18 @@ jobs:
             --no-restore `
             --output "publish" `
             -p:PublishSingleFile=false `
-            -p:PublishTrimmed=false `
-            -p:IncludeNativeLibrariesForSelfExtract=false `
-            -p:EnableCompressionInSingleFile=false
-
+            -p:PublishTrimmed=false
           if (-not (Test-Path "publish/SuvidhaPos-Installer.exe")) {
             Get-ChildItem "publish" -Recurse
             exit 1
           }
 
-      - name: Verify published reference UI assets
+      - name: Verify published assets
         shell: pwsh
         run: |
-          $assets = @(
-            "publish/Assets/ReferenceUI/Step1.png",
-            "publish/Assets/ReferenceUI/Step2.png",
-            "publish/Assets/ReferenceUI/Step3.png",
-            "publish/Assets/ReferenceUI/Step4.png",
-            "publish/Assets/ReferenceUI/Step5.png",
-            "publish/Assets/ReferenceUI/Step6.png",
-            "publish/Assets/ReferenceUI/Step7.png"
-          )
-          foreach ($asset in $assets) {
-            if (-not (Test-Path $asset)) { throw "Missing published reference asset: $asset" }
-            Write-Host "Verified: $asset"
-          }
-
-          foreach ($asset in @("publish/Assets/SuvidhaPOS.ico", "publish/Assets/SuvidhaPOS.png")) {
-            if (-not (Test-Path $asset)) { throw "Missing published asset: $asset" }
-            Write-Host "Verified: $asset"
+          foreach ($asset in @("Assets/SuvidhaPOS.ico", "Assets/SuvidhaPOS.png")) {
+            if (-not (Test-Path "publish/$asset")) { throw "Missing published asset: $asset" }
+            Write-Host "Verified: publish/$asset"
           }
 
       - name: Install Inno Setup
@@ -141,13 +118,5 @@ jobs:
         with:
           name: SuvidhaPos-Installer-Windows-x64
           path: release/SuvidhaPOS-Installer-Setup.exe
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload published application
-        uses: actions/upload-artifact@v4
-        with:
-          name: SuvidhaPos-Installer-App-Folder
-          path: publish/
           if-no-files-found: error
           retention-days: 14
