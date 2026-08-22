@@ -8,5 +8,9 @@
     <AssemblyName>SuvidhaPOS-Installer</AssemblyName>
     <RootNamespace>SuvidhaPOSInstaller</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="MainForm.cs" />
+  </ItemGroup>
 </Project>
