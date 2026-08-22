@@ -1,0 +1,50 @@
+name: Build Installer
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore Installer/SuvidhaPos-Installer.csproj
+
+      - name: Build
+        run: dotnet build Installer/SuvidhaPos-Installer.csproj -c Release --no-restore
+
+      - name: Publish self-contained x64
+        run: dotnet publish Installer/SuvidhaPos-Installer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Package installer
+        shell: pwsh
+        run: iscc Installer/SuvidhaPos-Installer.iss
+
+      - name: Verify installer
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "artifacts/SuvidhaPOS-Installer-Setup.exe")) { throw "Installer was not created." }
+          $item = Get-Item "artifacts/SuvidhaPOS-Installer-Setup.exe"
+          Write-Host "Installer size: $($item.Length) bytes"
+          Get-FileHash $item.FullName -Algorithm SHA256 | Format-List
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: SuvidhaPOS-Installer-v3.0.0
+          path: artifacts/SuvidhaPOS-Installer-Setup.exe
+          if-no-files-found: error
