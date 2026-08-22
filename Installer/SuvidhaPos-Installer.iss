@@ -31,4 +31,4 @@ Name: "{autodesktop}\Suvidha POS Installer"; Filename: "{app}\{#AppExeName}"; Ta
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional icons:"
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Launch Suvidha POS Installer"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Description: "Launch Suvidha POS Installer"; Flags: shellexec nowait postinstall skipifsilent
